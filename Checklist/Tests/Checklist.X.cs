@@ -44,9 +44,14 @@ namespace Checklist
             checklistItems.Add(new ChecklistItem("X2. Förväntad bordshöjd räknas ut och läggs in i Aria", "Räkna ut förväntad bordshöjd och lägg in i Aria(på alla fält, inklusive setup-fält) i modulen Treatment Preparation i rutan för Couch Vrt:\r\n• Eclipse: -DICOM offset Z - isocenter Z + offset cm\r\nMasterPlan: -TPRP coordinate Z - isocenter Z + offset cm\r\n• Offset är 7,1 cm för CT_A, CT_B, CT_C och -17,5 för PET/CT 01 (kan dock variera beroende på britshöjd vid PET-undersökningen)\r\n• Observera att vid för prone byter DICOM-koordinaten tecken\r\n• Observera risk för kollision mellan gantry och bord vid Vrt < -30 cm\r\nVid SSD-teknik:\r\n  • Ska tjockleken på eventuell vacuumpåse bestämmas genom mätning i CT-bilderna och antecknas under Patientuppläggning & fixation i behandlingskortet.\r\n  • Räkna ut förflyttning från fältet närmast 0° till övriga fält (Isocenterkoordinat för ursprungsfältet minus övriga fälts isocenterkoordinater) och anteckna detta på sida 2 i behandlingsprotokollet. Exempel: Relativ förflyttning från fält 1 till fält 2: ∆Vrt=25,0 cm.\r\n  • Skriv på sidan 3 i behandlingskortet under kommentarer: ”FHA-beh. Ring fysiker vid start.”", x2_value, x2_status));
             // Add elinores corda computation here
 
-            checklistItems.Add(new ChecklistItem("X3. Treatment Approved", "Gör planen Treatment Approved. Planen får endast göras Treatment Approved efter att ovanstående kontroller är utförda och Oberoende MU-koll eller QC-mätning är signerad. MasterPlan: Gör även eventuell setup-plan Treatment Approved.", string.Empty, AutoCheckStatus.MANUAL));
+            if (checklistType == ChecklistType.EclipseVMAT && GetVMATCoplanar(planSetup) == false)
+            {
+                checklistItems.Add(new ChecklistItem("X3. Notera icke coplanar VMAT under Setup note", "Planen i fråga är en icke coplanar VMAT behandling. Säkerställ att en notering om detta finns under planens Setup note", string.Empty, AutoCheckStatus.MANUAL));
+            }
 
-            checklistItems.Add(new ChecklistItem("X4. Task sätts till Done", "Tryck Done när alla kontroller är klara\r\n  • Ändra Qty till det antal planer som har kontrollerats\r\n  • Om planen har kontrollmätts tycker man Done först när planen både är kontrollerad och kontrollmätt", string.Empty, AutoCheckStatus.MANUAL));
+            checklistItems.Add(new ChecklistItem("X4. Treatment Approved", "Gör planen Treatment Approved. Planen får endast göras Treatment Approved efter att ovanstående kontroller är utförda och Oberoende MU-koll eller QC-mätning är signerad. MasterPlan: Gör även eventuell setup-plan Treatment Approved.", string.Empty, AutoCheckStatus.MANUAL));
+
+            checklistItems.Add(new ChecklistItem("X5. Task sätts till Done", "Tryck Done när alla kontroller är klara\r\n  • Ändra Qty till det antal planer som har kontrollerats\r\n  • Om planen har kontrollmätts tycker man Done först när planen både är kontrollerad och kontrollmätt", string.Empty, AutoCheckStatus.MANUAL));
 
             //checklistItems.Add(new ChecklistItem("X5. Signera i rutan Fysiker kontroll", "Genomgången checklista med accepterat resultat bekräftas med signatur i behandlingskortet i rutan Fysiker kontroll.", string.Empty, AutoCheckStatus.MANUAL));
         }

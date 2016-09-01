@@ -70,6 +70,7 @@
     <Compile Include="Checklist\Checklist.BeamParameter.cs" />
     <Compile Include="Checklist\Checklist.GetIsSplitVMAT.cs" />
     <Compile Include="Checklist\Checklist.ElektaMLCcheck.cs" />
+    <Compile Include="Checklist\Checklist.GetVMATCoplanar.cs" />
     <Compile Include="Checklist\QueryContents.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>

@@ -308,6 +308,18 @@ namespace Checklist
                 checklistItems.Add(new ChecklistItem("S7. Bildtagningsmodalitet är korrekt", "Kontrollera att bildtagning är korrekt\r\nVarian:\r\n  • Korrekt bildtagningsmodalitet är inlagd, samt att bildtagning är aktiverad för alla sessioner på setup-fälten\r\n  • Se bilaga 4 i dokumentet ”Verifikationsbilder”\r\nElekta:\r\n  • Inga setup-fält på tangentiella bröstbehandlingar\r\n  • Inga setup-fält på L09, L07 och L05 (XVI används i första hand för icke-laterala behandlingar)\r\n  • På L03 tas bilder med behandlingsfält om de finns i 0/180° och 90/270°, annars ska det finnas setup-fält", s7_value, s7_value_detailed, s7_status));
             }
 
+            string s8_value = "Saknas";
+            AutoCheckStatus s8_status = AutoCheckStatus.FAIL;
+            foreach (Beam beam in planSetup.Beams)
+            {
+                if (beam.IsSetupField && !Operators.LikeString(beam.Id, "Uppl*gg", CompareMethod.Text))
+                {
+                    s8_status = AutoCheckStatus.PASS;
+                    s8_value = "Existerar";
+                    break;
+                }
+            }
+            checklistItems.Add(new ChecklistItem("S8. Kontrollera att ett Uppläggsfält existerar i planen", "Kontrollera att det finns ett fält med Id Upplägg i behandlingsplanen", s8_value, s8_status));
         }
     }
 }

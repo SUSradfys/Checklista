@@ -280,7 +280,7 @@ namespace Checklist
                 checklistItems.Add(new ChecklistItem("P9. MLC:n är indragen till X-bländare, och ett/två blad är öppna utanför Y-bländare", "Kontrollera att MLC:n är indragen till X-bländare eller innanför, och att ett helt bladpar är öppet utanför Y-bländare på resp. sida om Y1 resp. Y2 har decimal 0,7, 0,8 eller 0,9.", p9_value, p9_status));
             }
 
-            string p10_value = "Metod: " + planSetup.PlanNormalizationMethod + ", target: " + planSetup.TargetVolumeID + ", prescribed percentage: " + planSetup.PrescribedPercentage + ", värde: " + planSetup.PlanNormalizationValue.ToString("0.0");
+            string p10_value = "Metod: " + planSetup.PlanNormalizationMethod + ", target: " + planSetup.TargetVolumeID + ", prescribed percentage: " + planSetup.PrescribedPercentage * 100.0 + ", värde: " + planSetup.PlanNormalizationValue.ToString("0.0");
             AutoCheckStatus p10_status = AutoCheckStatus.MANUAL;
             double normLimitVMAT = 3.0;
             if (checklistType == ChecklistType.EclipseVMAT && Math.Abs(planSetup.PlanNormalizationValue - 100) > normLimitVMAT)

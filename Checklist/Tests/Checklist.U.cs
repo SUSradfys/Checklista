@@ -17,24 +17,35 @@ namespace Checklist
             if (planSetup.StructureSet != null && planSetup.StructureSet.Image != null)
                 r1_imageid = planSetup.StructureSet.Image.Id;
             string r1_value = "Personnummer: " + patient.Id + ", Course: " + course.Id + ", Plan: " + planSetup.Id + ", CT: " + (image == null ? "-" : image.Id);
-            checklistItems.Add(new ChecklistItem("R1. Jämför id (course, plan, CT-set, patient) mellan protokoll, behandlingskort och Aria", "Kontrollera att Course, plannamn, CT-set och patientens personnummer stämmer överens mellan protokoll behandlingskort och Aria.", r1_value, AutoCheckStatus.MANUAL));
+            string r1_value_detail = string.Empty;
+            DataTable remarks = AriaInterface.Query("select Image.ImageNotes from Image, Series where Series.SeriesUID = '" + image.Series.UID.ToString() + "' and Image.SeriesSer = Series.SeriesSer and Image.ImageType = 'Image' and Image.ImageId = '" + image.Id.ToString() + "'");
+            if (remarks.Rows.Count == 1 && remarks.Rows[0][0] != DBNull.Value)
+            {
+                r1_value_detail = (string)remarks.Rows[0][0];
+                checklistItems.Add(new ChecklistItem("R1. Jämför id (course, plan, CT-set, patient) mellan protokoll, behandlingskort och Aria", "Kontrollera att Course, plannamn, CT-set och patientens personnummer stämmer överens mellan protokoll behandlingskort och Aria.", r1_value, r1_value_detail, AutoCheckStatus.MANUAL));
+            }
+            else
+                checklistItems.Add(new ChecklistItem("R1. Jämför id (course, plan, CT-set, patient) mellan protokoll, behandlingskort och Aria", "Kontrollera att Course, plannamn, CT-set och patientens personnummer stämmer överens mellan protokoll behandlingskort och Aria.", r1_value, AutoCheckStatus.MANUAL));
 
             AutoCheckStatus r2_status = AutoCheckStatus.FAIL;
             string r2_value = string.Empty;
+            string r2_value_detail = string.Empty;
             string prescriptionVolume = string.Empty;
             long prescriptionAnatomySer = long.MinValue;
             bool guessedVolume = false;
             bool multiplePrescriptionLevels = false;
             string planningVolume = string.Empty;
+
             DataTable planning = AriaInterface.Query("select distinct PlanSetupSer, PrimaryPTVSer, PatientVolumeSer, StructureId from PlanSetup, Structure where PlanSetup.PlanSetupSer = " + planSetupSer.ToString() + "  and PlanSetup.PrimaryPTVSer = Structure.PatientVolumeSer");
             if (planning.Rows.Count == 1 && planning.Rows[0][3] != DBNull.Value)
                     planningVolume = (string)planning.Rows[0][3];
-            DataTable prescription = AriaInterface.Query("select distinct PlanSetupSer, PlanSetup.PrescriptionSer, PrescriptionAnatomy.PrescriptionSer, PrescriptionAnatomy.PrescriptionAnatomySer, PrescriptionAnatomyItem.PrescriptionAnatomySer, ItemType, ItemValue, Prescription.Status, Prescription.PrescriptionSer, Prescription.PrescriptionName  from PlanSetup, Prescription, PrescriptionAnatomy, PrescriptionAnatomyItem where PlanSetup.PlanSetupSer = " + planSetupSer.ToString() + " and PlanSetup.PrescriptionSer = PrescriptionAnatomy.PrescriptionSer and PrescriptionAnatomy.PrescriptionAnatomySer = PrescriptionAnatomyItem.PrescriptionAnatomySer and PrescriptionAnatomyItem.ItemType = 'VOLUME ID' and PlanSetup.PrescriptionSer = Prescription.PrescriptionSer");
+            DataTable prescription = AriaInterface.Query("select distinct PlanSetupSer, PlanSetup.PrescriptionSer, PrescriptionAnatomy.PrescriptionSer, PrescriptionAnatomy.PrescriptionAnatomySer, PrescriptionAnatomyItem.PrescriptionAnatomySer, ItemType, ItemValue, Prescription.Status, Prescription.PrescriptionSer, Prescription.PrescriptionName, Prescription.Notes from PlanSetup, Prescription, PrescriptionAnatomy, PrescriptionAnatomyItem where PlanSetup.PlanSetupSer = " + planSetupSer.ToString() + " and PlanSetup.PrescriptionSer = PrescriptionAnatomy.PrescriptionSer and PrescriptionAnatomy.PrescriptionAnatomySer = PrescriptionAnatomyItem.PrescriptionAnatomySer and PrescriptionAnatomyItem.ItemType = 'VOLUME ID' and PlanSetup.PrescriptionSer = Prescription.PrescriptionSer");
             if (prescription.Rows.Count > 0 && prescription.Rows[0][6] != DBNull.Value)
             {
                 //string volumeName = string.Empty;
                 string prescriptionStatus = (string)prescription.Rows[0][7];
                 string prescriptionName = (string)prescription.Rows[0][9];
+                r2_value_detail = (string)prescription.Rows[0][10];
 
                 if (prescription.Rows.Count == 1)
                 {
@@ -63,7 +74,7 @@ namespace Checklist
             }
             else if (prescription.Rows.Count == 0)
                 r2_value = "Ordination saknas";
-            checklistItems.Add(new ChecklistItem("R2. Kontrollera status på kopplad ordination.", "Kontrollera att det finns en ordination kopplad till planen samt att dess status är satt till 'Approved'.", r2_value, r2_status));
+            checklistItems.Add(new ChecklistItem("R2. Kontrollera status på kopplad ordination.", "Kontrollera att det finns en ordination kopplad till planen samt att dess status är satt till 'Approved'.", r2_value, r2_value_detail, r2_status));
 
             if (r2_status == AutoCheckStatus.PASS)
             {
@@ -72,7 +83,12 @@ namespace Checklist
                 if (multiplePrescriptionLevels == true && guessedVolume == false)
                 {
                     r3_value = "Multipla ordinationsvolymer existerar. Ingen matchar den planerade volymen. ";
-                    r3_status = AutoCheckStatus.WARNING;
+                    r3_status = AutoCheckStatus.MANUAL;
+                }
+                else if (multiplePrescriptionLevels == true && guessedVolume == true)
+                {
+                    r3_value = "Multipla ordinationsvolymer existerar. Följande matchar den planerade volymen: " + prescriptionVolume + ", ";
+                    r3_status = AutoCheckStatus.MANUAL;
                 }
                 else
                 {
@@ -105,7 +121,7 @@ namespace Checklist
                                 double.TryParse((string)row["ItemValue"], out dosePerFraction);
                         }
                         r4_value = "Ordination: " + dosePerFraction.ToString("0.000") + " Gy * " + numberOfFractions.ToString() + " = " + totalDose.ToString("0.000") + " Gy";
-                        r4_value_detailed = "Ordination: \r\n  • Fraktionsdos: " + dosePerFraction.ToString("0.000") + " Gy \r\n  • Antal fraktioner: " + numberOfFractions.ToString() + "\r\n  • Totaldos: " + totalDose.ToString("0.000") + " Gy\r\n";
+                        r4_value_detailed = "Ordination: \r\n  • Volym: " + prescriptionVolume + "\r\n  • Fraktionsdos: " + dosePerFraction.ToString("0.000") + " Gy \r\n  • Antal fraktioner: " + numberOfFractions.ToString() + "\r\n  • Totaldos: " + totalDose.ToString("0.000") + " Gy\r\n";
                     }
                     if (fractionation != null)
                     {
@@ -118,11 +134,36 @@ namespace Checklist
                     r4_status = AutoCheckStatus.MANUAL;
                     if (fractionation != null)
                         r4_value += (r4_value == string.Empty ? "Ordination: Tvetydigt, " : ", ") + "Planerat: " + fractionation.PrescribedDosePerFraction.ToString() + " * " + fractionation.NumberOfFractions.ToString() + " = " + planSetup.TotalPrescribedDose.ToString();
+                    if (prescription.Rows.Count > 0)
+                    {
+                        foreach (DataRow row in prescription.Rows)
+                        {
+                            string volumeName = (string)row[6];
+                            long ser = (long)row[3];
+                            double totalDose = double.NaN;
+                            double dosePerFraction = double.NaN;
+                            int nOfFractions = 0;
+                            DataTable prescriptionItem = AriaInterface.Query("select NumberOfFractions, ItemType, ItemValue, PrescriptionAnatomyItem.PrescriptionAnatomySer, PrescriptionAnatomy.PrescriptionAnatomySer, PrescriptionAnatomy.PrescriptionSer, Prescription.PrescriptionSer  from Prescription, PrescriptionAnatomy, PrescriptionAnatomyItem where PrescriptionAnatomy.PrescriptionAnatomySer = " + ser.ToString() + " and PrescriptionAnatomy.PrescriptionAnatomySer = PrescriptionAnatomyItem.PrescriptionAnatomySer and PrescriptionAnatomy.PrescriptionSer = Prescription.PrescriptionSer");
+                            if (prescriptionItem.Rows.Count > 0)
+                            {
+                                nOfFractions = (int)prescriptionItem.Rows[0]["NumberOfFractions"];
+                                foreach (DataRow itemRow in prescriptionItem.Rows)
+                                {
+                                    if (String.Equals((string)itemRow["ItemType"], "Total dose", StringComparison.OrdinalIgnoreCase))
+                                        double.TryParse((string)itemRow["ItemValue"], out totalDose);
+                                    if (String.Equals((string)itemRow["ItemType"], "Dose per fraction", StringComparison.OrdinalIgnoreCase))
+                                        double.TryParse((string)itemRow["ItemValue"], out dosePerFraction);
+                                }
+
+                            }
+                            r4_value_detailed += (r4_value_detailed == string.Empty ? "Ordination: \r\n" : "\r\n") + "  • Volym: " + volumeName + "\r\n  • Fraktionsdos: " + dosePerFraction.ToString("0.000") + " Gy \r\n  • Antal fraktioner: " + nOfFractions.ToString() + "\r\n  • Totaldos: " + totalDose.ToString("0.000") + " Gy\r\n";
+                        }
+                    }
                 }
                 if (fractionation == null)
                     r4_status = AutoCheckStatus.FAIL;
                 else
-                    r4_value_detailed += (r4_value_detailed == string.Empty ? "" : "\r\n") + "Planerat: \r\n  • Fraktionsdos: " + fractionation.PrescribedDosePerFraction.ToString() + "\r\n  • Antal fraktioner: " + fractionation.NumberOfFractions.ToString() + "\r\n  • Totaldos: " + planSetup.TotalPrescribedDose.ToString();
+                    r4_value_detailed += (r4_value_detailed == string.Empty ? "" : "\r\n") + "Planerat: \r\n  • Volym: " + planningVolume + "\r\n  • Fraktionsdos: " + fractionation.PrescribedDosePerFraction.ToString() + "\r\n  • Antal fraktioner: " + fractionation.NumberOfFractions.ToString() + "\r\n  • Totaldos: " + planSetup.TotalPrescribedDose.ToString();
                 checklistItems.Add(new ChecklistItem("R4. Kontrollera att ordination stämmer med vad som planerats.", "Kontrollera att ordination överensstämmer med plan vad gäller \r\n  • Fraktionsdos\r\n  • Antal fraktioner\r\n  • Totaldos", r4_value, r4_value_detailed, r4_status));
             }
             
