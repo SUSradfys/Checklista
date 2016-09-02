@@ -51,7 +51,10 @@ namespace Checklist
 
             checklistItems.Add(new ChecklistItem("X4. Treatment Approved", "Gör planen Treatment Approved. Planen får endast göras Treatment Approved efter att ovanstående kontroller är utförda och Oberoende MU-koll eller QC-mätning är signerad.", string.Empty, AutoCheckStatus.MANUAL));
 
-            checklistItems.Add(new ChecklistItem("X5. Task sätts till Done", "Tryck Done när alla kontroller är klara\r\n  • Ändra Qty till det antal planer som har kontrollerats\r\n  • Om planen har kontrollmätts tycker man Done först när planen både är kontrollerad och kontrollmätt", string.Empty, AutoCheckStatus.MANUAL));
+            if (checklistType == ChecklistType.EclipseVMAT)
+                checklistItems.Add(new ChecklistItem("X5. QC Course sätts till Completed.", "Sätt status på QC coursen till Completed.", "", AutoCheckStatus.MANUAL));
+
+            checklistItems.Add(new ChecklistItem("X6. Task sätts till Done", "Tryck Done när alla kontroller är klara\r\n  • Ändra Qty till det antal planer som har kontrollerats\r\n  • Om planen har kontrollmätts tycker man Done först när planen både är kontrollerad och kontrollmätt", string.Empty, AutoCheckStatus.MANUAL));
 
             //checklistItems.Add(new ChecklistItem("X5. Signera i rutan Fysiker kontroll", "Genomgången checklista med accepterat resultat bekräftas med signatur i behandlingskortet i rutan Fysiker kontroll.", string.Empty, AutoCheckStatus.MANUAL));
         }
