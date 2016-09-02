@@ -22,10 +22,10 @@ namespace Checklist
             if (remarks.Rows.Count == 1 && remarks.Rows[0][0] != DBNull.Value)
             {
                 r1_value_detail = (string)remarks.Rows[0][0];
-                checklistItems.Add(new ChecklistItem("R1. Jämför id (course, plan, CT-set, patient) mellan protokoll, behandlingskort och Aria", "Kontrollera att Course, plannamn, CT-set och patientens personnummer stämmer överens mellan protokoll behandlingskort och Aria.", r1_value, r1_value_detail, AutoCheckStatus.MANUAL));
+                checklistItems.Add(new ChecklistItem("R1. Jämför id (course, plan, CT-set, patient) mellan protokoll och Aria", "Kontrollera att Course, plannamn, CT-set och patientens personnummer stämmer överens mellan protokoll och Aria.", r1_value, r1_value_detail, AutoCheckStatus.MANUAL));
             }
             else
-                checklistItems.Add(new ChecklistItem("R1. Jämför id (course, plan, CT-set, patient) mellan protokoll, behandlingskort och Aria", "Kontrollera att Course, plannamn, CT-set och patientens personnummer stämmer överens mellan protokoll behandlingskort och Aria.", r1_value, AutoCheckStatus.MANUAL));
+                checklistItems.Add(new ChecklistItem("R1. Jämför id (course, plan, CT-set, patient) mellan protokoll och Aria", "Kontrollera att Course, plannamn, CT-set och patientens personnummer stämmer överens mellan protokoll och Aria.", r1_value, AutoCheckStatus.MANUAL));
 
             AutoCheckStatus r2_status = AutoCheckStatus.FAIL;
             string r2_value = string.Empty;
@@ -53,6 +53,7 @@ namespace Checklist
                     prescriptionAnatomySer = (long)prescription.Rows[0][3];
                     
                 }
+                /*
                 else
                 {
                     multiplePrescriptionLevels = true;
@@ -68,17 +69,19 @@ namespace Checklist
                         }
                     }
                 }
+                */
 
                 r2_status = CheckResult(string.Compare(prescriptionStatus, "Approved") == 0);
                 r2_value = prescriptionName + ": " + prescriptionStatus;
             }
             else if (prescription.Rows.Count == 0)
                 r2_value = "Ordination saknas";
-            checklistItems.Add(new ChecklistItem("R2. Kontrollera status på kopplad ordination.", "Kontrollera att det finns en ordination kopplad till planen samt att dess status är satt till 'Approved'.", r2_value, r2_value_detail, r2_status));
+            checklistItems.Add(new ChecklistItem("R2. Status på kopplad ordination.", "Kontrollera att det finns en ordination kopplad till planen samt att dess status är satt till 'Approved'.", r2_value, r2_value_detail, r2_status));
 
             if (r2_status == AutoCheckStatus.PASS)
             {
                 string r3_value;
+                /*
                 AutoCheckStatus r3_status = AutoCheckStatus.MANUAL;
                 if (multiplePrescriptionLevels == true && guessedVolume == false)
                 {
@@ -100,11 +103,23 @@ namespace Checklist
                 }
                 r3_value += "Planerad volym: " + (planningVolume == string.Empty ? "-" : planningVolume);
                 checklistItems.Add(new ChecklistItem("R3. Kontrollera att ordinerad volym stämmer överens med planerad volym.", "Kontrollera att volymen som planens primära referenspunkt tillhör motsvarar den volym som det är ordinerat till.", r3_value, r3_status));
+                */
+                if (prescription.Rows.Count > 1)
+                    r3_value = "Ordinerade volymer: ";
+                else
+                    r3_value = "Ordinerad volym: ";
+                foreach (DataRow row in prescription.Rows)
+                {
+                    r3_value += (string)row[6] + ", ";
+                }
+                r3_value += "Planerad volym: " + (planningVolume == string.Empty ? "-" : planningVolume);
+                r3_value.Replace(", Planerad volym", "; Planerad volym");
+                checklistItems.Add(new ChecklistItem("R3. Ordinerad volym stämmer överens med planerad volym.", "Kontrollera att volymen som planens primära referenspunkt tillhör motsvarar den volym som det är ordinerat till.", r3_value, AutoCheckStatus.MANUAL));
 
                 AutoCheckStatus r4_status = AutoCheckStatus.UNKNOWN;
                 string r4_value = string.Empty;
                 string r4_value_detailed = string.Empty;
-                if (r3_status == AutoCheckStatus.PASS || prescription.Rows.Count == 1)
+                if (prescription.Rows.Count == 1)
                 {
                     int numberOfFractions = int.MinValue;
                     double dosePerFraction = double.NaN;
@@ -164,7 +179,7 @@ namespace Checklist
                     r4_status = AutoCheckStatus.FAIL;
                 else
                     r4_value_detailed += (r4_value_detailed == string.Empty ? "" : "\r\n") + "Planerat: \r\n  • Volym: " + planningVolume + "\r\n  • Fraktionsdos: " + fractionation.PrescribedDosePerFraction.ToString() + "\r\n  • Antal fraktioner: " + fractionation.NumberOfFractions.ToString() + "\r\n  • Totaldos: " + planSetup.TotalPrescribedDose.ToString();
-                checklistItems.Add(new ChecklistItem("R4. Kontrollera att ordination stämmer med vad som planerats.", "Kontrollera att ordination överensstämmer med plan vad gäller \r\n  • Fraktionsdos\r\n  • Antal fraktioner\r\n  • Totaldos", r4_value, r4_value_detailed, r4_status));
+                checklistItems.Add(new ChecklistItem("R4. Ordination konsekvent vad som planerats.", "Kontrollera att ordination är konsekvent med vad som planerats gällande \r\n  • Fraktionsdos\r\n  • Antal fraktioner\r\n  • Totaldos", r4_value, r4_value_detailed, r4_status));
             }
             
         }

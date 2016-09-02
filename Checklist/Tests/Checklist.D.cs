@@ -102,7 +102,7 @@ namespace Checklist
               
             else
                 d5_value = "Model: " + couchModel + ", Interior: " + couchInteriorHU.ToString() + " HU, Surface: " + couchSurfaceHU.ToString() + " HU (" + treatmentUnitManufacturer + ")";
-            checklistItems.Add(new ChecklistItem("D5. Britsprofil och HU har valts korrekt", "Kontrollera att korrekt britsprofil och korrekta HU valts under Structure Properties för britsstrukturerna och fliken General samt CT Value and Material.\r\n•Varian: Exact IGRT Couch, medium (CouchSurface: -300, CouchInterior: -950)\r\n•Elekta: BrainLAB/iBeam Couch (CouchSurface: -300, CouchInterior: -950)\r\n•Notera att brits inte ska inkluderas för icke coplanara VMAT behandlingar", d5_value, d5_status));
+            checklistItems.Add(new ChecklistItem("D5. Britsprofil och HU har valts korrekt", "Kontrollera att korrekt britsprofil och korrekta HU valts under Structure Properties för britsstrukturerna och fliken General samt CT Value and Material.\r\n• Varian: Exact IGRT Couch, medium (CouchSurface: -300, CouchInterior: -950)\r\n• Elekta: BrainLAB/iBeam Couch (CouchSurface: -300, CouchInterior: -950)\r\n• Notera att brits inte ska inkluderas för icke coplanara VMAT behandlingar", d5_value, d5_status));
 
             string d6_value = string.Empty;
             string d6_value_detailed = string.Empty;

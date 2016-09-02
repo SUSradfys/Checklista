@@ -134,7 +134,7 @@ namespace Checklist
                     p4_status = AutoCheckStatus.PASS;
                 p4_value = "Ej ikryssad";
             }
-            checklistItems.Add(new ChecklistItem("P4. Use Gated är korrekt", "Kontrollera att rutan Use Gated under Plan properties svarar mot ordination (läkare ordinerar gating under kommentarer under behandlingsordination i behandlingskortet)", p4_value, p4_status));
+            checklistItems.Add(new ChecklistItem("P4. Use Gated är korrekt", "Kontrollera att rutan Use Gated under Plan properties är ikryssad för gatingplaner respektive inte ikryssad för icke-gatingplaner.", p4_value, p4_status));
 
             if (checklistType == ChecklistType.EclipseGating)
             {
@@ -280,7 +280,7 @@ namespace Checklist
                 checklistItems.Add(new ChecklistItem("P9. MLC:n är indragen till X-bländare, och ett/två blad är öppna utanför Y-bländare", "Kontrollera att MLC:n är indragen till X-bländare eller innanför, och att ett helt bladpar är öppet utanför Y-bländare på resp. sida om Y1 resp. Y2 har decimal 0,7, 0,8 eller 0,9.", p9_value, p9_status));
             }
 
-            string p10_value = "Metod: " + planSetup.PlanNormalizationMethod + ", target: " + planSetup.TargetVolumeID + ", prescribed percentage: " + planSetup.PrescribedPercentage * 100.0 + ", värde: " + planSetup.PlanNormalizationValue.ToString("0.0");
+            string p10_value = "Metod: " + planSetup.PlanNormalizationMethod + ", target: " + planSetup.TargetVolumeID + ", prescribed percentage: " + (planSetup.PrescribedPercentage * 100.0).ToString("0.#") + ", värde: " + planSetup.PlanNormalizationValue.ToString("0.0");
             AutoCheckStatus p10_status = AutoCheckStatus.MANUAL;
             double normLimitVMAT = 3.0;
             if (checklistType == ChecklistType.EclipseVMAT && Math.Abs(planSetup.PlanNormalizationValue - 100) > normLimitVMAT)
@@ -430,7 +430,7 @@ namespace Checklist
                 p15_status = AutoCheckStatus.WARNING;
             }
 
-            checklistItems.Add(new ChecklistItem("P15. Kontrollera konsekvens mellan planerad och bokad behandlingsapparat.", "Kontrollera att patienten är bokad till den behandlingsapparat som planen är planerad för.", p15_value, p15_value_detailed, p15_status));
+            checklistItems.Add(new ChecklistItem("P15. Konsekvens mellan planerad och bokad behandlingsapparat.", "Kontrollera att patienten är bokad till den behandlingsapparat som planen är planerad för.", p15_value, p15_value_detailed, p15_status));
         }
     }
 }

@@ -25,7 +25,7 @@ namespace Checklist
                 {
                     double iduPosVrt = double.NaN;
                     DataTable dataTableIDUPosVrt = AriaInterface.Query("select IDUPosVrt from Radiation,ExternalFieldCommon where ExternalFieldCommon.RadiationSer=Radiation.RadiationSer and Radiation.PlanSetupSer=" + planSetupSer.ToString() + " and Radiation.RadiationId='" + beam.Id + "'");
-                    if (dataTableIDUPosVrt.Rows.Count == 1 && dataTableIDUPosVrt.Rows[0][0] != DBNull.Value && !Operators.LikeString(beam.Id,"Uppl*gg",CompareMethod.Text))
+                    if (dataTableIDUPosVrt.Rows.Count == 1 && dataTableIDUPosVrt.Rows[0][0] != DBNull.Value && !Operators.LikeString(beam.Id.ToLower(),"Uppl*gg".ToLower(), CompareMethod.Text))
                     {
                         iduPosVrt = (double)dataTableIDUPosVrt.Rows[0][0];
                         if (iduPosVrt == -50)
@@ -33,7 +33,7 @@ namespace Checklist
                         else
                             s1_numberOfWarnings++;
                     }
-                    else if (Operators.LikeString(beam.Id, "Uppl*gg", CompareMethod.Text)) // Field with Id Upplägg may have any ImageVrt Position, even undefined.
+                    else if (Operators.LikeString(beam.Id.ToLower(), "Uppl*gg".ToLower(), CompareMethod.Text)) // Field with Id Upplägg may have any ImageVrt Position, even undefined.
                         s1_numberOfPass++;
                     s1_value += (s1_value.Length == 0 ? string.Empty : ", ") + beam.Id + ": " + (double.IsNaN(iduPosVrt) ? "-" : ((double)iduPosVrt).ToString("0.0") + " cm");
                 }
@@ -134,7 +134,7 @@ namespace Checklist
             List<double> s3_setupFieldAngles = new List<double>();
             List<string> s3_beamIds = new List<string>();
             foreach (Beam beam in planSetup.Beams)
-                if (beam.IsSetupField && !Operators.LikeString(beam.Id, "Uppl*gg", CompareMethod.Text))
+                if (beam.IsSetupField && !Operators.LikeString(beam.Id.ToLower(), "Uppl*gg".ToLower(), CompareMethod.Text))
                 {
                     s3_setupFieldAngles.Add(beam.ControlPoints[0].GantryAngle);
                     s3_beamIds.Add(beam.Id.ToLower());
@@ -218,7 +218,7 @@ namespace Checklist
             string s5_value = string.Empty;
             foreach (Beam beam in planSetup.Beams)
             {
-                if (Operators.LikeString(beam.Id, "Uppl*gg", CompareMethod.Text) == false)
+                if (Operators.LikeString(beam.Id.ToLower(), "Uppl*gg".ToLower(), CompareMethod.Text) == false)
                 {
                     DataTable DRRSetting = AriaInterface.Query("select distinct SliceRT.AcqNote from Radiation, PlanSetup, SliceRT, Slice, Image where  PlanSetup.PlanSetupSer =" + planSetupSer.ToString() + " and Radiation.RadiationId ='" + beam.Id + "' and PlanSetup.PlanSetupSer = Radiation.PlanSetupSer and SliceRT.RadiationSer = Radiation.RadiationSer and SliceRT.SliceSer = Slice.SliceSer and SliceRT.AcqNote like 'MultiWindow%'");
                     if (DRRSetting.Rows.Count == 1 && DRRSetting.Rows[0][0] != DBNull.Value)
@@ -267,7 +267,7 @@ namespace Checklist
                 List<string> s7_beamId = new List<string>();
                 foreach (Beam beam in planSetup.Beams)
                 {
-                    if (beam.IsSetupField && !Operators.LikeString(beam.Id, "Uppl*gg", CompareMethod.Text))
+                    if (beam.IsSetupField && !Operators.LikeString(beam.Id.ToLower(), "Uppl*gg".ToLower(), CompareMethod.Text))
                     {
                         List<string> protocolIds = new List<string>();
 
@@ -312,14 +312,14 @@ namespace Checklist
             AutoCheckStatus s8_status = AutoCheckStatus.FAIL;
             foreach (Beam beam in planSetup.Beams)
             {
-                if (beam.IsSetupField && !Operators.LikeString(beam.Id, "Uppl*gg", CompareMethod.Text))
+                if (beam.IsSetupField && Operators.LikeString(beam.Id.ToLower(), "Uppl*gg".ToLower(), CompareMethod.Text))
                 {
                     s8_status = AutoCheckStatus.PASS;
                     s8_value = "Existerar";
                     break;
                 }
             }
-            checklistItems.Add(new ChecklistItem("S8. Kontrollera att ett Uppläggsfält existerar i planen", "Kontrollera att det finns ett fält med Id Upplägg i behandlingsplanen", s8_value, s8_status));
+            checklistItems.Add(new ChecklistItem("S8. Uppläggsfält existerar i planen", "Kontrollera att det finns ett fält med Id Upplägg i behandlingsplanen", s8_value, s8_status));
         }
     }
 }
