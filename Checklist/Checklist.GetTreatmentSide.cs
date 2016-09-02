@@ -28,7 +28,7 @@ namespace Checklist
 
             if (double.IsNaN(isoPosX))
                 return TreatmentSide.Unknown;
-            else if (isoPosX < -50)
+            else if (isoPosX < -50 && planSetup.TreatmentOrientation.ToString().IndexOf("H") == 0 || isoPosX >= 50 && planSetup.TreatmentOrientation.ToString().IndexOf("F") == 0)
                 return TreatmentSide.MinusX;
             else
                 return TreatmentSide.PlusX;
