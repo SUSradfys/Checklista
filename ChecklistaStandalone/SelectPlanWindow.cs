@@ -23,7 +23,7 @@ namespace Checklist
             this.Location = new Point(0, 0);
 
             InitializeComponent();
-
+            
             //textBoxPatientId.Text = "test_FN";
             textBoxPatientId.Text = "QC_Checklista"; 
             //buttonOpen_Click(null, null);
