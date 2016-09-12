@@ -23,25 +23,9 @@ namespace Checklist
             this.Location = new Point(0, 0);
 
             InitializeComponent();
-
-            //textBoxPatientId.Text = "197510070365"; // Eclipse, RA
-            //textBoxPatientId.Text = "194309145813"; // Eclipse, RA
-            //textBoxPatientId.Text = "194811192998"; // Eclipse, warnings, FFS, Elekta
-            //textBoxPatientId.Text = "198610012091"; // OMP
-            //textBoxPatientId.Text = "198707012723"; // Gating
-            //textBoxPatientId.Text = "195311092265"; // Två planer
-            //textBoxPatientId.Text = "193902103997"; // FFF
+            
             //textBoxPatientId.Text = "test_FN";
             textBoxPatientId.Text = "QC_Checklista"; 
-            //textBoxPatientId.Text = "194611033749"; //Ordination
-            //textBoxPatientId.Text = "197610203528"; // Extended APPA
-            //textBoxPatientId.Text = "196906133506"; // sida Elekta
-            //textBoxPatientId.Text = "195707194493"; // ordination PTV/CTV
-            //textBoxPatientId.Text = "195503169319"; // multiple prescription levels
-            //textBoxPatientId.Text = "196703224318"; // no guessing prescription volume
-
-            //textBoxPatientId.Text = "test_fn_FFFmam";
-
             //buttonOpen_Click(null, null);
             //listBoxCourses.SelectedIndex = 0;
             //listBoxPlans.SelectedIndex = 0;

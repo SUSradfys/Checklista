@@ -320,6 +320,8 @@ namespace Checklist
                 }
             }
             checklistItems.Add(new ChecklistItem("S8. Uppläggsfält existerar i planen", "Kontrollera att det finns ett fält med Id Upplägg i behandlingsplanen", s8_value, s8_status));
+
+            checklistItems.Add(new ChecklistItem("S9. Uppläggningen är genomförbar", "Kontrollera att upplägget är genomförbart för den givna geometrin \r\n  • Exempelvis att behandlingar av extremt kaudala target inte är orienterade 'Head First'", "", AutoCheckStatus.MANUAL));
         }
     }
 }

@@ -22,10 +22,10 @@ namespace Checklist
             if (remarks.Rows.Count == 1 && remarks.Rows[0][0] != DBNull.Value)
             {
                 r1_value_detail = (string)remarks.Rows[0][0];
-                checklistItems.Add(new ChecklistItem("R1. Jämför id (course, plan, CT-set, patient) mellan protokoll och Aria", "Kontrollera att Course, plannamn, CT-set och patientens personnummer stämmer överens mellan protokoll och Aria.", r1_value, r1_value_detail, AutoCheckStatus.MANUAL));
+                checklistItems.Add(new ChecklistItem("R1. Jämför id (course, plan, CT-set, patient) mellan remiss, protokoll och Aria", "Kontrollera att \r\n  • Patientens personnummer stämmer överens mellan remiss och Aria\r\n  • Course, plannamn och CT-set stämmer överens mellan protokoll och Aria.", r1_value, r1_value_detail, AutoCheckStatus.MANUAL));
             }
             else
-                checklistItems.Add(new ChecklistItem("R1. Jämför id (course, plan, CT-set, patient) mellan protokoll och Aria", "Kontrollera att Course, plannamn, CT-set och patientens personnummer stämmer överens mellan protokoll och Aria.", r1_value, AutoCheckStatus.MANUAL));
+                checklistItems.Add(new ChecklistItem("R1. Jämför id (course, plan, CT-set, patient) mellan remiss, protokoll och Aria", "Kontrollera att \r\n  • Patientens personnummer stämmer överens mellan remiss och Aria\r\n  • Course, plannamn och CT-set stämmer överens mellan protokoll och Aria.", r1_value, AutoCheckStatus.MANUAL));
 
             AutoCheckStatus r2_status = AutoCheckStatus.FAIL;
             string r2_value = string.Empty;
@@ -76,7 +76,7 @@ namespace Checklist
             }
             else if (prescription.Rows.Count == 0)
                 r2_value = "Ordination saknas";
-            checklistItems.Add(new ChecklistItem("R2. Status på kopplad ordination.", "Kontrollera att det finns en ordination kopplad till planen samt att dess status är satt till 'Approved'.", r2_value, r2_value_detail, r2_status));
+            checklistItems.Add(new ChecklistItem("R2. Status på kopplad ordination.", "Kontrollera att planen är kopplad till en ordination kopplad vars status 'Approved'.", r2_value, r2_value_detail, r2_status));
 
             if (r2_status == AutoCheckStatus.PASS)
             {
@@ -179,7 +179,7 @@ namespace Checklist
                     r4_status = AutoCheckStatus.FAIL;
                 else
                     r4_value_detailed += (r4_value_detailed == string.Empty ? "" : "\r\n") + "Planerat: \r\n  • Volym: " + planningVolume + "\r\n  • Fraktionsdos: " + fractionation.PrescribedDosePerFraction.ToString() + "\r\n  • Antal fraktioner: " + fractionation.NumberOfFractions.ToString() + "\r\n  • Totaldos: " + planSetup.TotalPrescribedDose.ToString();
-                checklistItems.Add(new ChecklistItem("R4. Ordination konsekvent vad som planerats.", "Kontrollera att ordination är konsekvent med vad som planerats gällande \r\n  • Fraktionsdos\r\n  • Antal fraktioner\r\n  • Totaldos", r4_value, r4_value_detailed, r4_status));
+                checklistItems.Add(new ChecklistItem("R4. Planen är konsekvent med vad som ordinerats.", "Kontrollera att planen är konsekvent med vad som ordinerats gällande: \r\n  • Fraktionsdos\r\n  • Antal fraktioner\r\n  • Totaldos", r4_value, r4_value_detailed, r4_status));
             }
             
         }

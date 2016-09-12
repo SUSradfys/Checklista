@@ -224,11 +224,13 @@ namespace Checklist
                 p7_value = reorderBeamParam(p7_value, ",");
                 checklistItems.Add(new ChecklistItem("P7. Diodvärden finns införda under Comments för fälten", "Kontrollera att diodvärden finns införda för fält med >=25 MU alternativt >=50 MU (öppet+kil) för Elekta.", p7_value, p7_status));
             }
-            
-            string p8_value_detailed = string.Empty;
-            string p8_value = String.Empty;
+
+            checklistItems.Add(new ChecklistItem("P8. Dosfördelningen är rimlig", "Kontrollera att dosfördelningen är rimlig med avseende på targettäckning och omkringliggande riskorgan", "", AutoCheckStatus.MANUAL));
+
+            string p9_value_detailed = string.Empty;
+            string p9_value = String.Empty;
             bool isSplit = false;
-            AutoCheckStatus p8_status = AutoCheckStatus.UNKNOWN;
+            AutoCheckStatus p9_status = AutoCheckStatus.UNKNOWN;
             if (checklistType == ChecklistType.EclipseVMAT)
                 isSplit = GetIsSplitVMAT(planSetup);
             foreach (Beam beam in planSetup.Beams)
@@ -239,60 +241,60 @@ namespace Checklist
                     double wedgedMU;
                     GetMU(beam, out openMU, out wedgedMU);
 
-                    p8_value_detailed += beam.Id + ":\r\n";
+                    p9_value_detailed += beam.Id + ":\r\n";
                     if (checklistType == ChecklistType.EclipseVMAT)
                     {
-                        p8_value_detailed += "  Open: " + openMU.ToString("0.0") + " MU\r\n  " + beam.MetersetPerGy.ToString("0.0") + " MU/Gy\r\n";
+                        p9_value_detailed += "  Open: " + openMU.ToString("0.0") + " MU\r\n  " + beam.MetersetPerGy.ToString("0.0") + " MU/Gy\r\n";
                         if (beam.MetersetPerGy > 300 && !isSplit)
-                            p8_value += (p8_value.Length == 0 ? string.Empty : ", ") + beam.Id + ": För många MU/Gy";
+                            p9_value += (p9_value.Length == 0 ? string.Empty : ", ") + beam.Id + ": För många MU/Gy";
                         else if (beam.MetersetPerGy > 550 && isSplit)
-                            p8_value += (p8_value.Length == 0 ? string.Empty : ", ") + beam.Id + ": För många MU/Gy";
+                            p9_value += (p9_value.Length == 0 ? string.Empty : ", ") + beam.Id + ": För många MU/Gy";
                     }
                     else
                     {
-                        p8_value_detailed += "  Open: " + openMU.ToString("0.0") + ", Wedged: " + wedgedMU.ToString("0.0") + "\r\n";  
+                        p9_value_detailed += "  Open: " + openMU.ToString("0.0") + ", Wedged: " + wedgedMU.ToString("0.0") + "\r\n";  
                     }
-                    p8_value_detailed += "  Energi: " + beam.EnergyModeDisplayName + "\r\n\r\n";
+                    p9_value_detailed += "  Energi: " + beam.EnergyModeDisplayName + "\r\n\r\n";
 
                     if (openMU < 10 && openMU != 0 || wedgedMU < 30 && wedgedMU != 0)
-                        p8_value += (p8_value.Length == 0 ? string.Empty : ", ") + beam.Id + ": För få MU";
+                        p9_value += (p9_value.Length == 0 ? string.Empty : ", ") + beam.Id + ": För få MU";
                     if (treatmentUnitManufacturer == TreatmentUnitManufacturer.Elekta && openMU + wedgedMU > 999)
-                        p8_value += (p8_value.Length == 0 ? string.Empty : ", ") + beam.Id + ": För många MU";
+                        p9_value += (p9_value.Length == 0 ? string.Empty : ", ") + beam.Id + ": För många MU";
                 }
             }
-            if (p8_value.Length > 0 )
+            if (p9_value.Length > 0 )
             {
                 if (checklistType == ChecklistType.EclipseVMAT)
-                    p8_status = AutoCheckStatus.WARNING;
+                    p9_status = AutoCheckStatus.WARNING;
                 else
-                    p8_status = AutoCheckStatus.FAIL;
-                p8_value = reorderBeamParam(p8_value, ",");
+                    p9_status = AutoCheckStatus.FAIL;
+                p9_value = reorderBeamParam(p9_value, ",");
             }
 
-            p8_value_detailed = reorderBeamParam(p8_value_detailed, "\r\n\r\n");
-            checklistItems.Add(new ChecklistItem("P8. Fälten ser rimliga ut vad gäller form, energi, MU och korrektion av artefakter", "Kontrollera att fälten ser rimliga ut vad gäller form, energi, MU och korrektion av artefakter\r\n  • Riktlinje för RapidArc är max 300 MU/Gy om bländarna är utanför target under hela varvet (sett ur BEV). Vid delvis skärmat target är denna gräns max 550 MU/Gy.\r\n  • Öppna fält ska ha ≥10 MU och fält med fast kil (Elekta) ska ha ≥30 kilade MU.\r\n  •  För Elekta gäller dessutom att totala antalet MU per fält (öppet + kilet) ej får överstiga 999 MU.", p8_value, p8_value_detailed, p8_status));
+            p9_value_detailed = reorderBeamParam(p9_value_detailed, "\r\n\r\n");
+            checklistItems.Add(new ChecklistItem("P9. Fälten ser rimliga ut vad gäller form, energi, MU och korrektion av artefakter", "Kontrollera att fälten ser rimliga ut vad gäller form, energi, MU och korrektion av artefakter\r\n  • Riktlinje för RapidArc är max 300 MU/Gy om bländarna är utanför target under hela varvet (sett ur BEV). Vid delvis skärmat target är denna gräns max 550 MU/Gy.\r\n  • Öppna fält ska ha ≥10 MU och fält med fast kil (Elekta) ska ha ≥30 kilade MU.\r\n  •  För Elekta gäller dessutom att totala antalet MU per fält (öppet + kilat) ej får överstiga 999 MU.", p9_value, p9_value_detailed, p9_status));
 
             if (treatmentUnitManufacturer == TreatmentUnitManufacturer.Elekta)
             {
-                AutoCheckStatus p9_status = AutoCheckStatus.UNKNOWN;
-                string p9_value = ElektaMLCCheck(planSetup);
-                p9_status = CheckResult(String.Compare(p9_value, "MLC positioner OK.", true) == 0);
-                checklistItems.Add(new ChecklistItem("P9. MLC:n är indragen till X-bländare, och ett/två blad är öppna utanför Y-bländare", "Kontrollera att MLC:n är indragen till X-bländare eller innanför, och att ett helt bladpar är öppet utanför Y-bländare på resp. sida om Y1 resp. Y2 har decimal 0,7, 0,8 eller 0,9.", p9_value, p9_status));
+                AutoCheckStatus p10_status = AutoCheckStatus.UNKNOWN;
+                string p10_value = ElektaMLCCheck(planSetup);
+                p10_status = CheckResult(String.Compare(p10_value, "MLC positioner OK.", true) == 0);
+                checklistItems.Add(new ChecklistItem("P10. MLC:n är indragen till X-bländare, och ett/två blad är öppna utanför Y-bländare", "Kontrollera att MLC:n är indragen till X-bländare eller innanför, och att ett helt bladpar är öppet utanför Y-bländare på resp. sida om Y1 resp. Y2 har decimal 0,7, 0,8 eller 0,9.", p10_value, p10_status));
             }
 
-            string p10_value = "Metod: " + planSetup.PlanNormalizationMethod + ", target: " + planSetup.TargetVolumeID + ", prescribed percentage: " + (planSetup.PrescribedPercentage * 100.0).ToString("0.#") + ", värde: " + planSetup.PlanNormalizationValue.ToString("0.0");
-            AutoCheckStatus p10_status = AutoCheckStatus.MANUAL;
+            string p11_value = "Metod: " + planSetup.PlanNormalizationMethod + ", target: " + planSetup.TargetVolumeID + ", prescribed percentage: " + (planSetup.PrescribedPercentage * 100.0).ToString("0.0") + ", värde: " + planSetup.PlanNormalizationValue.ToString("0.0");
+            AutoCheckStatus p11_status = AutoCheckStatus.MANUAL;
             double normLimitVMAT = 3.0;
             if (checklistType == ChecklistType.EclipseVMAT && Math.Abs(planSetup.PlanNormalizationValue - 100) > normLimitVMAT)
             {
-                p10_status = AutoCheckStatus.FAIL;
+                p11_status = AutoCheckStatus.FAIL;
             }
-            checklistItems.Add(new ChecklistItem("P10. Normering är korrekt", "Kontrollera att planen är normerad på korrekt vis \r\n  • Normalt till targetvolymens medeldos i Eclipse (om särskilt skäl föreligger kan en punktnormering användas) respektive punktdos i MasterPlan. \r\n  • För stereotaktiska lungor i Eclipse normeras dosen till isocenter och ordineras till 75%-isodosen.\r\n  • För VMAT får normeringsvärdet skall normeringsvärdet vara i intervallet [0.970, 1.030].", p10_value, p10_status));
+            checklistItems.Add(new ChecklistItem("P11. Normering är korrekt", "Kontrollera att planen är normerad på korrekt vis \r\n  • Normalt till targetvolymens medeldos (om särskilt skäl föreligger kan en punktnormering användas). \r\n  • För stereotaktiska lungor i Eclipse normeras dosen till isocenter och ordineras till 75%-isodosen.\r\n  • För VMAT ska Plan Normalization Value skall normeringsvärdet vara i intervallet [0.970, 1.030].", p11_value, p11_status));
 
-            string p11_value = string.Empty;            
-            string p12_value = string.Empty;
-            string p12_value_detailed = string.Empty;
-            AutoCheckStatus p12_status = AutoCheckStatus.WARNING;
+            string p12_value = string.Empty;            
+            string p13_value = string.Empty;
+            string p13_value_detailed = string.Empty;
+            AutoCheckStatus p13_status = AutoCheckStatus.WARNING;
             List<ReferencePoint> referencePoints = new List<ReferencePoint>();
             List<double> referencePointDose = new List<double>();
             List<double> referencePointTotalDose = new List<double>();
@@ -333,10 +335,10 @@ namespace Checklist
                     }
                 }
             }
-            int p12_numberOfPass = 0;
+            int p13_numberOfPass = 0;
             for (int refPointNr = 0; refPointNr < referencePoints.Count; refPointNr++)
             {
-                p12_value_detailed += (p12_value_detailed.Length == 0 ? string.Empty : "\r\n\r\n") + referencePoints[refPointNr].Id + ":\r\n";
+                p13_value_detailed += (p13_value_detailed.Length == 0 ? string.Empty : "\r\n\r\n") + referencePoints[refPointNr].Id + ":\r\n";
 
                 double totalDoseLimit = double.NaN;
                 double dailyDoseLimit = double.NaN;
@@ -349,57 +351,57 @@ namespace Checklist
                     dailyDoseLimit = (dataTableRefPointLimits.Rows[0][2] == DBNull.Value ? dailyDoseLimit = double.NaN : dailyDoseLimit = (double)dataTableRefPointLimits.Rows[0][2]);
                     sessionDoseLimit = (dataTableRefPointLimits.Rows[0][3] == DBNull.Value ? sessionDoseLimit = double.NaN : sessionDoseLimit = (double)dataTableRefPointLimits.Rows[0][3]);
                 }
-                p12_value_detailed += "  Dosbidrag från aktuell plan: " + (fractionation == null ? double.NaN : referencePointDose[refPointNr] * (double)fractionation.NumberOfFractions).ToString("0.000") + " Gy, " + referencePointDose[refPointNr].ToString("0.000") + " Gy/fr " + " (Total dose limit: " + totalDoseLimit.ToString("0.000") + " Gy, daily limit: " + dailyDoseLimit.ToString("0.000") + " Gy, session limit: " + sessionDoseLimit.ToString("0.000") + " Gy)\r\n";                   
-                p12_value_detailed += "  Totalt dosbidrag från samtliga godkändaplaner: " + referencePointTotalDose[refPointNr].ToString("0.000") + " Gy " + " (Total limit: " + totalDoseLimit.ToString("0.000") + " Gy)";
+                p13_value_detailed += "  Dosbidrag från aktuell plan: " + (fractionation == null ? double.NaN : referencePointDose[refPointNr] * (double)fractionation.NumberOfFractions).ToString("0.000") + " Gy, " + referencePointDose[refPointNr].ToString("0.000") + " Gy/fr " + " (Total dose limit: " + totalDoseLimit.ToString("0.000") + " Gy, daily limit: " + dailyDoseLimit.ToString("0.000") + " Gy, session limit: " + sessionDoseLimit.ToString("0.000") + " Gy)\r\n";                   
+                p13_value_detailed += "  Totalt dosbidrag från samtliga godkändaplaner: " + referencePointTotalDose[refPointNr].ToString("0.000") + " Gy " + " (Total limit: " + totalDoseLimit.ToString("0.000") + " Gy)";
                 
                 if (activeReferencePoints.Contains(refPointNr)) // Reference point is present in the active plan
                 {
-                    p11_value += (p11_value.Length == 0 ? string.Empty : ", ") + referencePoints[refPointNr].Id + ": " + referencePointDose[refPointNr].ToString("0.000") + " Gy";
-                    p12_value += (p12_value.Length == 0 ? string.Empty : ", ") + referencePoints[refPointNr].Id + ": (T:" + totalDoseLimit.ToString("0.000") + "/D:" + dailyDoseLimit.ToString("0.000") + "/S:" + sessionDoseLimit.ToString("0.000") + " Gy)";
+                    p12_value += (p12_value.Length == 0 ? string.Empty : ", ") + referencePoints[refPointNr].Id + ": " + referencePointDose[refPointNr].ToString("0.000") + " Gy";
+                    p13_value += (p13_value.Length == 0 ? string.Empty : ", ") + referencePoints[refPointNr].Id + ": (T:" + totalDoseLimit.ToString("0.000") + "/D:" + dailyDoseLimit.ToString("0.000") + "/S:" + sessionDoseLimit.ToString("0.000") + " Gy)";
                     
                     if (Math.Round(referencePointDose[refPointNr], 3) <= Math.Round(dailyDoseLimit, 3) &&
                         Math.Round(referencePointDose[refPointNr], 3) <= Math.Round(sessionDoseLimit, 3) &&
                         Math.Round(referencePointTotalDose[refPointNr], 3) == Math.Round(totalDoseLimit, 3))
                     {
-                        p12_numberOfPass++;
+                        p13_numberOfPass++;
                     }
                 }
             }
-            if (activeReferencePoints.Count > 0 && p12_numberOfPass == activeReferencePoints.Count)
-                p12_status = AutoCheckStatus.UNKNOWN;
-            checklistItems.Add(new ChecklistItem("P11. Referenspunkternas dosbidrag är korrekta", "Kontrollera att dosbidrag till referenspunkter (dos) är korrekta:\r\n  • Varje plan ska ha en punkt (primary reference point) som summerar upp till ordinerad dos för det största PTV som planen primärt behandlar.\r\n  • Om flera planer bidrar med dos till samma targetvolymer eller om en plan bidrar med dos till flera targetvolymer ska det finnas referenspunkter utan lokalisation i alla planer som summerar dosen till dessa volymer.\r\n  • Referenspunkterna ska inte ha dosbidrag från tidigare behandlingar.", p11_value, AutoCheckStatus.MANUAL));
-            checklistItems.Add(new ChecklistItem("P12. Referenspunkternas gränser är korrekta", "Kontrollera att referenspunkternas gränser (dos) är korrekta", p12_value, p12_value_detailed, p12_status));
+            if (activeReferencePoints.Count > 0 && p13_numberOfPass == activeReferencePoints.Count)
+                p13_status = AutoCheckStatus.UNKNOWN;
+            checklistItems.Add(new ChecklistItem("P12. Referenspunkternas dosbidrag är korrekta", "Kontrollera att dosbidrag till referenspunkter (dos) är korrekta:\r\n  • Varje plan ska ha en punkt (primary reference point) som summerar upp till ordinerad dos för det största PTV som planen primärt behandlar.\r\n  • Om flera planer bidrar med dos till samma targetvolymer eller om en plan bidrar med dos till flera targetvolymer ska det finnas referenspunkter utan lokalisation i alla planer som summerar dosen till dessa volymer.\r\n  • Referenspunkterna ska inte ha dosbidrag från tidigare behandlingar.", p12_value, AutoCheckStatus.MANUAL));
+            checklistItems.Add(new ChecklistItem("P13. Referenspunkternas gränser är korrekta", "Kontrollera att referenspunkternas gränser (dos) är korrekta", p13_value, p13_value_detailed, p13_status));
 
             if (checklistType == ChecklistType.Eclipse || checklistType == ChecklistType.EclipseGating)
-                checklistItems.Add(new ChecklistItem("P13. Skarven är flyttad korrekt för skarvplan", "Skarvplaner: Skarven är flyttad korrekt och fälten är i övrigt likadana\r\n  • Bröstbehandlingar med kollimator i 0° för både huvudfält i fossa- och tang.-fält flyttas endast om eventuellt PTV_66 ligger i skarven.", string.Empty, AutoCheckStatus.MANUAL));
+                checklistItems.Add(new ChecklistItem("P14. Skarven är flyttad korrekt för skarvplan", "Skarvplaner: Skarven är flyttad korrekt och fälten är i övrigt likadana\r\n  • Bröstbehandlingar med kollimator i 0° för både huvudfält i fossa- och tang.-fält flyttas endast om eventuellt PTV_66 ligger i skarven.", string.Empty, AutoCheckStatus.MANUAL));
 
 
-            AutoCheckStatus p14_status = AutoCheckStatus.UNKNOWN;
-            string p14_value = string.Empty;
-            int p14_numberOfPass = 0;
+            AutoCheckStatus p15_status = AutoCheckStatus.UNKNOWN;
+            string p15_value = string.Empty;
+            int p15_numberOfPass = 0;
             List<string> machineId = new List<string>();
             foreach (Beam beam in planSetup.Beams)
             {
                 machineId.Add(beam.TreatmentUnit.Id);
                 if (String.Equals(beam.TreatmentUnit.ToString(), planSetup.Beams.First().TreatmentUnit.ToString()))
-                    p14_numberOfPass += 1;
-                p14_value += (p14_value.Length == 0 ? string.Empty : ", ") + beam.Id + ": " + beam.TreatmentUnit.Id;
+                    p15_numberOfPass += 1;
+                p15_value += (p15_value.Length == 0 ? string.Empty : ", ") + beam.Id + ": " + beam.TreatmentUnit.Id;
             }
-            if (p14_numberOfPass == numberOfBeams)
-                p14_status = AutoCheckStatus.PASS;
+            if (p15_numberOfPass == numberOfBeams)
+                p15_status = AutoCheckStatus.PASS;
             else
-                p14_status = AutoCheckStatus.FAIL;
-            p14_value = reorderBeamParam(p14_value, ",");
-            checklistItems.Add(new ChecklistItem("P14. Konsekvent maskinval", "Kontrollera att samtliga fält är planerade till en och samma behandlingsapparat.", p14_value, p14_status));
+                p15_status = AutoCheckStatus.FAIL;
+            p15_value = reorderBeamParam(p15_value, ",");
+            checklistItems.Add(new ChecklistItem("P15. Konsekvent maskinval", "Kontrollera att samtliga fält är planerade till en och samma behandlingsapparat.", p15_value, p15_status));
 
-            AutoCheckStatus p15_status = AutoCheckStatus.UNKNOWN;
-            string p15_value = string.Empty;
-            string p15_value_detailed = "Följande bokningar är aktiva:\r\n";
+            AutoCheckStatus p16_status = AutoCheckStatus.UNKNOWN;
+            string p16_value = string.Empty;
+            string p16_value_detailed = "Följande bokningar är aktiva:\r\n";
             string treatMachineIdCommon = machineId.ToArray().GroupBy(v => v)
                 .OrderByDescending(g => g.Count())
                 .First()
                 .Key;
-            p15_value = "Planerat: " + treatMachineIdCommon + (machineId.Distinct().Count() == 1 ? " (enhetligt)" : " (tvetydigt)");
+            p16_value = "Planerat: " + treatMachineIdCommon + (machineId.Distinct().Count() == 1 ? " (enhetligt)" : " (tvetydigt)");
             DateTime date = DateTime.Now;
             List<string> bookedMachineId = new List<string>();
             string bookedMachineIdCommon = string.Empty;
@@ -410,27 +412,27 @@ namespace Checklist
                 foreach (DataRow row in bookings.Rows)
                 {
                     bookedMachineId.Add((string)row["MachineId"]);
-                    p15_value_detailed += (string)row["ScheduledStartTime"].ToString() + ": " + (string)row["MachineId"] + "\r\n";
+                    p16_value_detailed += (string)row["ScheduledStartTime"].ToString() + ": " + (string)row["MachineId"] + "\r\n";
                 }
                 bookedMachineIdCommon = bookedMachineId.ToArray().GroupBy(v => v)
                     .OrderByDescending(g => g.Count())
                     .First()
                     .Key;
-                p15_value += ", Bokat: " + bookedMachineIdCommon + (bookedMachineId.Distinct().Count() == 1 ? " (enhetligt)" : " (tvetydigt)");
+                p16_value += ", Bokat: " + bookedMachineIdCommon + (bookedMachineId.Distinct().Count() == 1 ? " (enhetligt)" : " (tvetydigt)");
                 if (String.Equals(treatMachineIdCommon, bookedMachineIdCommon, StringComparison.OrdinalIgnoreCase) && bookedMachineId.Distinct().Count() == 1 && machineId.Distinct().Count() == 1)
-                    p15_status = AutoCheckStatus.PASS;
+                    p16_status = AutoCheckStatus.PASS;
                 else if (String.Equals(treatMachineIdCommon, bookedMachineIdCommon, StringComparison.OrdinalIgnoreCase))
-                    p15_status = AutoCheckStatus.MANUAL;
+                    p16_status = AutoCheckStatus.MANUAL;
                 else
-                    p15_status = AutoCheckStatus.FAIL;
+                    p16_status = AutoCheckStatus.FAIL;
             }
             else
             {
-                p15_value += ", Bokat: -";
-                p15_status = AutoCheckStatus.WARNING;
+                p16_value += ", Bokat: -";
+                p16_status = AutoCheckStatus.WARNING;
             }
 
-            checklistItems.Add(new ChecklistItem("P15. Konsekvens mellan planerad och bokad behandlingsapparat.", "Kontrollera att patienten är bokad till den behandlingsapparat som planen är planerad för.", p15_value, p15_value_detailed, p15_status));
+            checklistItems.Add(new ChecklistItem("P16. Konsekvens mellan planerad och bokad behandlingsapparat.", "Kontrollera att patienten är bokad till den behandlingsapparat som planen är planerad för.", p16_value, p16_value_detailed, p16_status));
         }
     }
 }

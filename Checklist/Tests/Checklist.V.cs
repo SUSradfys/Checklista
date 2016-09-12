@@ -44,7 +44,7 @@ namespace Checklist
                     v1_status = AutoCheckStatus.PASS;
                 else if (v1_numberOfPass + v1_numberOfWarnings == numberOfTreatmentBeams)
                     v1_status = AutoCheckStatus.WARNING;
-                checklistItems.Add(new ChecklistItem("V1. Kollimatorvinkeln är lämplig", "Kontrollera att kollimatorvinkeln är lämplig\r\n  • IMRT: vanligtvis 2° (dock ej vinklar mellan 358° och 2°)\r\n  • VMAT: vanligtvis 5° grader resp. 355°, men passar detta ej PTV är andra vinklar ok (dock ej vinklar mellan 355° och 5°)", v1_value, v1_status));
+                checklistItems.Add(new ChecklistItem("V1. Kollimatorvinkeln är lämplig", "Kontrollera att kollimatorvinkeln är lämplig\r\n  • VMAT: vanligtvis 5° grader resp. 355°, men passar detta ej PTV är andra vinklar ok (dock ej vinklar mellan 355° och 5°)", v1_value, v1_status));
                                 
                 if (checklistType == ChecklistType.EclipseVMAT)
                 {
