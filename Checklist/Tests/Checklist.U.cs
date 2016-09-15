@@ -45,7 +45,8 @@ namespace Checklist
                 //string volumeName = string.Empty;
                 string prescriptionStatus = (string)prescription.Rows[0][7];
                 string prescriptionName = (string)prescription.Rows[0][9];
-                r2_value_detail = (string)prescription.Rows[0][10];
+                if (prescription.Rows[0][10] != DBNull.Value)
+                    r2_value_detail = (string)prescription.Rows[0][10];
 
                 if (prescription.Rows.Count == 1)
                 {
@@ -76,7 +77,10 @@ namespace Checklist
             }
             else if (prescription.Rows.Count == 0)
                 r2_value = "Ordination saknas";
-            checklistItems.Add(new ChecklistItem("R2. Status på kopplad ordination.", "Kontrollera att planen är kopplad till en ordination kopplad vars status 'Approved'.", r2_value, r2_value_detail, r2_status));
+            if (String.IsNullOrEmpty(r2_value_detail))
+                checklistItems.Add(new ChecklistItem("R2. Status på kopplad ordination.", "Kontrollera att planen är kopplad till en ordination kopplad vars status 'Approved'.", r2_value, r2_status));
+            else
+                checklistItems.Add(new ChecklistItem("R2. Status på kopplad ordination.", "Kontrollera att planen är kopplad till en ordination kopplad vars status 'Approved'.", r2_value, r2_value_detail, r2_status));
 
             if (r2_status == AutoCheckStatus.PASS)
             {
