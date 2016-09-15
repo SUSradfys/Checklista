@@ -186,6 +186,7 @@ namespace Checklist
             VVector s4_isocenterPosition = new VVector(double.NaN, double.NaN, double.NaN);
             foreach (Beam beam in planSetup.Beams)
             {
+                double allowedDiff = 0.5;  // the allowed difference between isocenters in mm
                 if (double.IsNaN(s4_isocenterPosition.x) && double.IsNaN(s4_isocenterPosition.y) && double.IsNaN(s4_isocenterPosition.z))
                 {
                      s4_isocenterPosition = beam.IsocenterPosition;
@@ -194,10 +195,13 @@ namespace Checklist
                      else
                          s4_isocenterCouldNotBeDetermined = true;
                  }
-                 else if (Math.Round(s4_isocenterPosition.x, 1) == Math.Round(beam.IsocenterPosition.x, 1) && Math.Round(s4_isocenterPosition.y, 1) == Math.Round(beam.IsocenterPosition.y, 1) && Math.Round(s4_isocenterPosition.z, 1) == Math.Round(beam.IsocenterPosition.z, 1))
+                
+                 //else if (Math.Round(s4_isocenterPosition.x, 1) == Math.Round(beam.IsocenterPosition.x, 1) && Math.Round(s4_isocenterPosition.y, 1) == Math.Round(beam.IsocenterPosition.y, 1) && Math.Round(s4_isocenterPosition.z, 1) == Math.Round(beam.IsocenterPosition.z, 1))
+                 else if (Math.Abs(s4_isocenterPosition.x - beam.IsocenterPosition.x) <= allowedDiff && Math.Abs(s4_isocenterPosition.y - beam.IsocenterPosition.y) <= allowedDiff && Math.Abs(s4_isocenterPosition.z - beam.IsocenterPosition.z) <= allowedDiff)
                     s4_numberOfPass++;
 
             }
+                        
             if (s4_numberOfPass == numberOfBeams)//numberOfTreatmentBeams)
             {
                 s4_value = "Samma isocenter";
@@ -213,6 +217,7 @@ namespace Checklist
                 s4_value = "Olika isocenter mellan fälten";
                 s4_status = AutoCheckStatus.WARNING;
             }
+
             checklistItems.Add(new ChecklistItem("S4. Alla fält har samma isocenter vid isocentrisk teknik", "Kontrollera att samtliga fälts (inklusive setup-fält) Isocenter sammanfaller.", s4_value, s4_status));
 
             string s5_value = string.Empty;
