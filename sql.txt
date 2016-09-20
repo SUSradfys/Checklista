@@ -1,0 +1,49 @@
+SELECT
+Patient.PatientId,
+Course.CourseId,
+PlanSetup.PlanSetupId,
+ActualStatus=(SELECT PlanSetup.Status FROM PlanSetup WHERE PlanSetup.PlanSetupSer=Approval.TypeSer),
+ActualStatusUserName=(SELECT PlanSetup.StatusUserName FROM PlanSetup WHERE PlanSetup.PlanSetupSer=Approval.TypeSer),
+ActualStatusDate=(SELECT PlanSetup.StatusDate FROM PlanSetup WHERE PlanSetup.PlanSetupSer=Approval.TypeSer),
+HistoricalStatus=Approval.Status,
+HistoricalStatusUserName=Approval.StatusUserName,
+HistoricalStatusDate=Approval.StatusDate
+FROM Approval, PlanSetup, Course, Patient
+WHERE
+Patient.PatientSer=Course.PatientSer
+AND Course.CourseSer=PlanSetup.CourseSer
+AND PlanSetup.PlanSetupSer=Approval.TypeSer
+AND Approval.ApprovalType='PlanSetup' and Patient.PatientId='197005114066'
+ORDER BY TypeSer
+
+
+
+SELECT PlanSetup.PlanSetupId, 
+ActualStatus=(SELECT PlanSetup.Status FROM PlanSetup WHERE PlanSetup.PlanSetupSer=Approval.TypeSer),
+HistoricalStatus=Approval.Status,
+HistoricalStatusDate=Approval.StatusDate,
+HistoricalStatusUserName=Approval.StatusUserName
+FROM Approval, PlanSetup, Staff
+WHERE
+PlanSetup.PlanSetupSer=Approval.TypeSer
+AND Approval.ApprovalType='PlanSetup' and PlanSetup.PlanSetupSer = '463481'
+ORDER BY TypeSer
+
+select HistoricalStatusUserName=(select Staff.AliasName from Staff, Approval where Staff.StaffId = Approval.StatusUserName)
+
+
+
+SELECT DISTINCT PlanSetup.PlanSetupId, 
+ActualStatus=(SELECT PlanSetup.Status FROM PlanSetup WHERE PlanSetup.PlanSetupSer=Approval.TypeSer),
+HistoricalStatus=Approval.Status,
+HistoricalStatusDate=Approval.StatusDate,
+HistoricalStatusUserId=Approval.StatusUserName,
+HistoricalStatusUserName=(SELECT DISTINCT Staff.AliasName FROM Staff WHERE Staff.StaffId=Approval.StatusUserName)
+FROM Approval, PlanSetup, Staff
+WHERE
+PlanSetup.PlanSetupSer=Approval.TypeSer
+AND Approval.ApprovalType='PlanSetup' and PlanSetup.PlanSetupSer = '463481'
+ORDER BY HistoricalStatusDate
+
+
+"SELECT DISTINCT PlanSetup.PlanSetupId, ActualStatus=(SELECT PlanSetup.Status FROM PlanSetup WHERE PlanSetup.PlanSetupSer=Approval.TypeSer), HistoricalStatus=Approval.Status, HistoricalStatusDate=Approval.StatusDate, HistoricalStatusUserId=Approval.StatusUserName, HistoricalStatusUserName=(SELECT DISTINCT Staff.AliasName FROM Staff WHERE Staff.StaffId=Approval.StatusUserName) FROM Approval, PlanSetup, Staff WHERE PlanSetup.PlanSetupSer=Approval.TypeSer AND Approval.ApprovalType='PlanSetup' and PlanSetup.PlanSetupSer = '" planSetupSer.ToString() "' ORDER BY HistoricalStatusDate"

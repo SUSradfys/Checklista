@@ -15,9 +15,38 @@ namespace Checklist
         {
             checklistItems.Add(new ChecklistItem("P. Dosplan"));
 
-            string p1_value = planSetup.ApprovalStatus.ToString();
-            AutoCheckStatus p1_status = CheckResult(planSetup.ApprovalStatus == PlanSetupApprovalStatus.PlanningApproved);
-            checklistItems.Add(new ChecklistItem("P1. Planen är planning approved", "Kontrollera att planen är Planning Approved i Aria.", p1_value, p1_status));
+            string p1_value = string.Empty;  
+            string p1_value_detail = string.Empty;
+            bool reviewed = false;
+            AutoCheckStatus p1_status = AutoCheckStatus.MANUAL; //CheckResult(planSetup.ApprovalStatus == PlanSetupApprovalStatus.PlanningApproved);
+            DataTable history = AriaInterface.Query("SELECT DISTINCT HistoricalStatus=Approval.Status, HistoricalStatusDate=Approval.StatusDate, HistoricalStatusUserId=Approval.StatusUserName, HistoricalStatusUserName=(SELECT DISTINCT Staff.AliasName FROM Staff WHERE Staff.StaffId=Approval.StatusUserName) FROM Approval, PlanSetup, Staff WHERE PlanSetup.PlanSetupSer=Approval.TypeSer AND Approval.ApprovalType='PlanSetup' and PlanSetup.PlanSetupSer = '" + planSetupSer.ToString() + "' ORDER BY HistoricalStatusDate");
+            if (history.Rows.Count > 0)
+                p1_value_detail += "Historisk Status\tTid\t\t\tUserId\tUserName\r\n";
+            foreach (DataRow row in history.Rows)
+            {
+                if (String.Equals((string)row["HistoricalStatus"], "Reviewed"))
+                    reviewed = true;
+                p1_value += (string)row["HistoricalStatus"] + ", ";
+                p1_value_detail += (string)row["HistoricalStatus"] + "\t" + row["HistoricalStatusDate"].ToString() + "\t" + (string)row["HistoricalStatusUserId"];
+                if (row["HistoricalStatusUserName"] == DBNull.Value)
+                    p1_value_detail += "\r\n";
+                else
+                    p1_value_detail += "\t" + (string)row["HistoricalStatusUserName"] + "\r\n";
+            }
+            p1_value += planSetup.ApprovalStatus.ToString();
+            if (String.Equals(planSetup.ApprovalStatus.ToString(), "PlanningApproved") == false)
+                p1_status = AutoCheckStatus.FAIL;
+            else if (reviewed == false)
+                p1_status = AutoCheckStatus.FAIL;
+            else
+            {
+                if (history.Rows.Count == 2 && String.Equals((string)history.Rows[1]["HistoricalStatus"], "Reviewed"))
+                    p1_status = AutoCheckStatus.PASS;
+            }
+            if (String.IsNullOrEmpty(p1_value_detail) == true)
+                checklistItems.Add(new ChecklistItem("P1. Planens status är korrekt", "Kontrollera att planen är Planning Approved i Aria samt att den tidigare haft status Reviewed", p1_value, p1_status));
+            else
+                checklistItems.Add(new ChecklistItem("P1. Planens status är korrekt", "Kontrollera att planen är Planning Approved i Aria samt att den tidigare haft status Reviewed", p1_value, p1_value_detail, p1_status));
 
             string p2_value = string.Empty;
             AutoCheckStatus p2_status = AutoCheckStatus.FAIL;
@@ -256,10 +285,24 @@ namespace Checklist
                     }
                     p9_value_detailed += "  Energi: " + beam.EnergyModeDisplayName + "\r\n\r\n";
 
+                    /*
                     if (openMU < 10 && openMU != 0 || wedgedMU < 30 && wedgedMU != 0)
                         p9_value += (p9_value.Length == 0 ? string.Empty : ", ") + beam.Id + ": För få MU";
                     if (treatmentUnitManufacturer == TreatmentUnitManufacturer.Elekta && openMU + wedgedMU > 999)
                         p9_value += (p9_value.Length == 0 ? string.Empty : ", ") + beam.Id + ": För många MU";
+                    */
+                    if (treatmentUnitManufacturer == TreatmentUnitManufacturer.Elekta)
+                    {
+                        if (openMU + wedgedMU > 999)
+                            p9_value += (p9_value.Length == 0 ? string.Empty : ", ") + beam.Id + ": För många MU";
+                        if (openMU < 10 && openMU != 0 || wedgedMU < 30 && wedgedMU != 0)
+                            p9_value += (p9_value.Length == 0 ? string.Empty : ", ") + beam.Id + ": För få MU";
+                    }
+                    else if (treatmentUnitManufacturer == TreatmentUnitManufacturer.Varian)
+                    {
+                        if (openMU < 10 && wedgedMU == 0 || wedgedMU != 0 && openMU + wedgedMU < 20)
+                            p9_value += (p9_value.Length == 0 ? string.Empty : ", ") + beam.Id + ": För få MU";
+                    }
                 }
             }
             if (p9_value.Length > 0 )
@@ -272,7 +315,7 @@ namespace Checklist
             }
 
             p9_value_detailed = reorderBeamParam(p9_value_detailed, "\r\n\r\n");
-            checklistItems.Add(new ChecklistItem("P9. Fälten ser rimliga ut vad gäller form, energi, MU och korrektion av artefakter", "Kontrollera att fälten ser rimliga ut vad gäller form, energi, MU och korrektion av artefakter\r\n  • Riktlinje för RapidArc är max 300 MU/Gy om bländarna är utanför target under hela varvet (sett ur BEV). Vid delvis skärmat target är denna gräns max 550 MU/Gy.\r\n  • Öppna fält ska ha ≥10 MU och fält med fast kil (Elekta) ska ha ≥30 kilade MU.\r\n  •  För Elekta gäller dessutom att totala antalet MU per fält (öppet + kilat) ej får överstiga 999 MU.", p9_value, p9_value_detailed, p9_status));
+            checklistItems.Add(new ChecklistItem("P9. Fälten ser rimliga ut vad gäller form, energi, MU och korrektion av artefakter", "Kontrollera att fälten ser rimliga ut vad gäller form, energi, MU och korrektion av artefakter\r\n  • Riktlinje för RapidArc är max 300 MU/Gy om bländarna är utanför target under hela varvet (sett ur BEV). Vid delvis skärmat target är denna gräns max 550 MU/Gy.\r\n  • Öppna fält ska ha ≥10 MU.\r\n  • Fält med dynamisk kil (Varian) ska ha minst 20 MU.\r\n  • Fält med fast kil (Elekta) ska ha ≥30 kilade MU.\r\n  •  För Elekta gäller dessutom att totala antalet MU per fält (öppet + kilat) ej får överstiga 999 MU.", p9_value, p9_value_detailed, p9_status));
 
             if (treatmentUnitManufacturer == TreatmentUnitManufacturer.Elekta)
             {

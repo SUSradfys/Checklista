@@ -63,7 +63,7 @@ namespace Checklist
                     }
                     if (v2_numberOfPass == numberOfTreatmentBeams)
                         v2_status = AutoCheckStatus.PASS;
-                    checklistItems.Add(new ChecklistItem("V2. Fältbredden är rimlig ", "Kontrollera att VMAT-fält har en rimlig fältbredd (riktvärde 15 cm, vid större target rekommenderas två arcs och delade fält).", v2_value, v2_status));
+                    checklistItems.Add(new ChecklistItem("V2. Fältbredden är rimlig ", "Kontrollera att VMAT-fält har en rimlig fältbredd (riktvärde 15 cm, vid större target ska två arcs och delade fält övervägas).", v2_value, v2_status));
 
                     string v3_details = string.Empty;
                     if (planSetup.OptimizationSetup != null)

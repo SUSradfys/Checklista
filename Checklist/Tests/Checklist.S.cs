@@ -126,7 +126,7 @@ namespace Checklist
                 if (s2_numberOfPass == numberOfTreatmentBeams)
                     s2_status = AutoCheckStatus.PASS;
                 s2_value = reorderBeamParam(s2_value, ",");
-                checklistItems.Add(new ChecklistItem("S2. Extended har valts korrekt på behandlingsfält", "Kontrollera att Extended har valts korrekt på behandlingsfält. Om det finns fält som går över långt på motstående sida (70° resp. 290°) ska inga fält ha Extended. I annat fall gäller:\r\n  • Vänstersidiga behandlingar: Fält med 180<gantryvinkel<=185 ska ha Extended\r\n  • Högersidiga behandlingar: Fält med 175<=gantryvinkel<=180 ska ha Extended\r\n  • Övriga fält ska ej ha Extended", s2_value, s2_status));
+                checklistItems.Add(new ChecklistItem("S2. Extended har valts korrekt på behandlingsfält", "Kontrollera att Extended har valts korrekt på behandlingsfält. Om det finns fält som går över långt på motstående sida (70° resp. 290°) ska inga fält ha Extended. I annat fall gäller:\r\n  • Vänstersidiga behandlingar: Fält med 180<gantryvinkel<=185 ska ha Extended\r\n  • Högersidiga behandlingar: Fält med 175<=gantryvinkel<=180 ska ha Extended\r\n  • Övriga fält ska ej ha Extended\r\n  • Notera att det omvända förhållandet mellan behandlingssida och fält som ska ha Extended gäller om patienten är orienterad Feet First (fötterna mot gantryt)", s2_value, s2_status));
             }
 
             string s3_value = string.Empty;
