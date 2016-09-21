@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using VMS.TPS.Common.Model.API;
 using VMS.TPS.Common.Model.Types;
+using System.Data;
 
 namespace Checklist
 {
@@ -40,9 +41,28 @@ namespace Checklist
                 i1_status = AutoCheckStatus.UNKNOWN;
             checklistItems.Add(new ChecklistItem("I1. CT-protokoll för radioterapi har använts", "Kontrollera att ett CT-protokoll för radioterapi har använts:\r\n• Eclipse: Se Image comment under Image properties (för serien) eller protokollet", i1_value, i1_status));
 
-            // consider using information from prescription if we can get prescriptions sorted
-            string i2_value = string.Empty;
-            AutoCheckStatus i2_status;
+            // Will now use information from Prescription rather than verifying against ChecklistType
+            string i2_value = "CT-underlag: ";
+            AutoCheckStatus i2_status = AutoCheckStatus.MANUAL;
+            if (image != null)
+                i2_value += image.Id + "; Ordination: ";
+            else
+            {
+                i2_value += "-" + "; Ordination: ";
+                i2_status = AutoCheckStatus.FAIL;
+            }
+            DataTable prescription = AriaInterface.Query("select Gating from Prescription, PlanSetup where PlanSetup.PrescriptionSer = Prescription.PrescriptionSer and PlanSetup.PlanSetupSer = '" + planSetupSer.ToString() + "'");
+            if (prescription.Rows.Count == 1)
+            {
+                if (prescription.Rows[0]["Gating"] != DBNull.Value)
+                    i2_value += (string)prescription.Rows[0]["Gating"];
+                else
+                    i2_value += "Friandning";
+            }
+            else
+                i2_value += "Obestämbart";
+
+            /*
             if (image != null)
             {
                 if (checklistType == ChecklistType.EclipseGating)
@@ -68,6 +88,7 @@ namespace Checklist
             }
             if (checklistType == ChecklistType.MasterPlan || checklistType == ChecklistType.MasterPlanIMRT)
                 i2_status = AutoCheckStatus.UNKNOWN;
+            */
             checklistItems.Add(new ChecklistItem("I2. CT-studie är korrekt m.a.p. gatingordination", "Kontrollera att den korrekta CT-studien med avseende på gatingordination har använts.", i2_value, i2_status));
 
             string i3_value = string.Empty;

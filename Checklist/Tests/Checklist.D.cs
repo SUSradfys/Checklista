@@ -46,7 +46,7 @@ namespace Checklist
             {
                 d3_status = AutoCheckStatus.UNKNOWN;
             }
-            checklistItems.Add(new ChecklistItem("D3. Heterogenitetskorrektion har applicerats korrekt", "Kontrollera att heterogenitetskorrektionen har använts om ej särskilda skäl föreligger", d3_value, d3_status));
+            checklistItems.Add(new ChecklistItem("D3. Heterogenitetskorrektion har applicerats korrekt", "Kontrollera att heterogenitetskorrektion har använts om ej särskilda skäl föreligger", d3_value, d3_status));
 
             // VMATFluenceResolution removed from checklist
             /*
@@ -96,13 +96,13 @@ namespace Checklist
                 d5_status = AutoCheckStatus.FAIL;
             // add on test if plan is non coplanar VMAT
             if (checklistType == ChecklistType.EclipseVMAT && GetVMATCoplanar(planSetup) == false)
-                d5_status = CheckResult(string.Compare(couchModel, "Saknas") == 0);
+                d5_status = AutoCheckStatus.MANUAL;
             if (string.Compare(couchModel, "Saknas") == 0)
                 d5_value = "Saknas (" + treatmentUnitManufacturer + ")";
               
             else
                 d5_value = "Model: " + couchModel + ", Interior: " + couchInteriorHU.ToString() + " HU, Surface: " + couchSurfaceHU.ToString() + " HU (" + treatmentUnitManufacturer + ")";
-            checklistItems.Add(new ChecklistItem("D5. Britsprofil och HU har valts korrekt", "Kontrollera att korrekt britsprofil och korrekta HU valts under Structure Properties för britsstrukturerna och fliken General samt CT Value and Material.\r\n• Varian: Exact IGRT Couch, medium (CouchSurface: -300, CouchInterior: -950)\r\n• Elekta: BrainLAB/iBeam Couch (CouchSurface: -300, CouchInterior: -950)\r\n• Notera att brits inte ska inkluderas för icke coplanara VMAT behandlingar", d5_value, d5_status));
+            checklistItems.Add(new ChecklistItem("D5. Britsprofil och HU har valts korrekt", "Kontrollera att korrekt britsprofil och korrekta HU valts under Structure Properties för britsstrukturerna och fliken General samt CT Value and Material.\r\n• Varian: Exact IGRT Couch, medium (CouchSurface: -300, CouchInterior: -950)\r\n• Elekta: BrainLAB/iBeam Couch (CouchSurface: -300, CouchInterior: -950)\r\n• Notera att brits inte ska inkluderas för icke coplanara VMAT behandlingar av intra- och extra-kraniella target kraniellt om C1.", d5_value, d5_status));
 
             string d6_value = string.Empty;
             string d6_value_detailed = string.Empty;

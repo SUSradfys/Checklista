@@ -48,7 +48,7 @@ namespace Checklist
             if (String.IsNullOrWhiteSpace(b2_value))
                 b2_value = "Information saknas";
 
-            checklistItems.Add(new ChecklistItem("B2. Ordinationen innehåller information om bolus", "Kontrollera att bolus finns angivet i ordinationen (aktuell tjocklek och bolustyp)\r\n  • Notera att uppgifter normalt saknas för de behandlingar där bolus används rutinmässigt (t.ex. 0.5 cm superflabb över ärr för abladerad mam)", b2_value, b2_status));
+            checklistItems.Add(new ChecklistItem("B2. Ordinationen innehåller information om bolus", "Kontrollera att bolus finns angivet i ordinationen (aktuell tjocklek och bolustyp).", b2_value, b2_status));
         }
     }
 }
