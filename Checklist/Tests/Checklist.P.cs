@@ -19,7 +19,7 @@ namespace Checklist
             string p1_value_detail = string.Empty;
             bool reviewed = false;
             AutoCheckStatus p1_status = AutoCheckStatus.MANUAL; //CheckResult(planSetup.ApprovalStatus == PlanSetupApprovalStatus.PlanningApproved);
-            DataTable history = AriaInterface.Query("SELECT DISTINCT HistoricalStatus=Approval.Status, HistoricalStatusDate=Approval.StatusDate, HistoricalStatusUserId=Approval.StatusUserName, HistoricalStatusUserName=(SELECT DISTINCT Staff.AliasName FROM Staff WHERE Staff.StaffId=Approval.StatusUserName) FROM Approval, PlanSetup, Staff WHERE PlanSetup.PlanSetupSer=Approval.TypeSer AND Approval.ApprovalType='PlanSetup' and PlanSetup.PlanSetupSer = '" + planSetupSer.ToString() + "' ORDER BY HistoricalStatusDate");
+            DataTable history = AriaInterface.Query("SELECT DISTINCT HistoricalStatus=Approval.Status, HistoricalStatusDate=Approval.StatusDate, HistoricalStatusUserId=Approval.StatusUserName, HistoricalStatusUserName=CONCAT((SELECT DISTINCT Staff.AliasName FROM Staff WHERE Staff.StaffId=Approval.StatusUserName), (SELECT DISTINCT Doctor.AliasName FROM Doctor WHERE Doctor.DoctorId=Approval.StatusUserName)) FROM Approval, PlanSetup, Staff WHERE PlanSetup.PlanSetupSer=Approval.TypeSer AND Approval.ApprovalType='PlanSetup' and PlanSetup.PlanSetupSer = '" + planSetupSer.ToString() + "' ORDER BY HistoricalStatusDate");
             if (history.Rows.Count > 0)
                 p1_value_detail += "Historisk Status\tTid\t\t\tUserId\tUserName\r\n";
             foreach (DataRow row in history.Rows)
