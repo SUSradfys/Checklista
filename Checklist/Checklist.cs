@@ -41,7 +41,6 @@ namespace Checklist
             this.planSetup = planSetup;
             this.checklistType = checklistType;
             this.userId = userId;
-            this.logFull = logFull;
             databaseManager = new DatabaseManager(Settings.RESULT_SERVER, Settings.RESULT_USERNAME, Settings.RESULT_PASSWORD, logFull);
 
             try
