@@ -29,12 +29,17 @@ namespace VMS.TPS
                 AriaInterface.Disconnect();
                 if (user.Rows.Count == 1 && user.Rows[0]["Profession"] != DBNull.Value)
                     profession = (string)user.Rows[0]["Profession"];
-                if (string.Compare(profession, "Fysiker") == 0)
+                if (string.Compare(profession, "Fysiker") == 0 || string.Compare(profession, "dpl") == 0)
                 {
+                    bool logFull;
+                    if (string.Compare(profession, "Fysiker") == 0)
+                        logFull = true;
+                    else
+                        logFull = false;
                     Checklist.SelectChecklistWindow selectChecklistWindow = new Checklist.SelectChecklistWindow();
                     if (selectChecklistWindow.ShowDialog() == DialogResult.OK)
                     {
-                        Checklist.Checklist checklist = new Checklist.Checklist(context.Patient, context.Course, context.PlanSetup, selectChecklistWindow.ChecklistType, context.CurrentUser.Id);
+                        Checklist.Checklist checklist = new Checklist.Checklist(context.Patient, context.Course, context.PlanSetup, selectChecklistWindow.ChecklistType, context.CurrentUser.Id, logFull);
                         checklist.Analyze();
                     }
                 }

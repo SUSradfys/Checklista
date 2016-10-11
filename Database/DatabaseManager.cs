@@ -11,7 +11,8 @@ namespace Checklist
 {
     public class DatabaseManager
     {
-        private readonly string database = "Checklist";
+        //private readonly string database = "Checklist";
+        private string database;
         private string server;
         private string userId;
         private string password;
@@ -21,6 +22,17 @@ namespace Checklist
             this.server = server;
             this.userId = userId;
             this.password = password;
+        }
+
+        public DatabaseManager(string server, string userId, string password, bool logFull)
+        {
+            this.server = server;
+            this.userId = userId;
+            this.password = password;
+            if (logFull)
+                database = "Checklist";
+            else
+                database = "MinimalCheck";
         }
 
         public bool CreateDatabase()

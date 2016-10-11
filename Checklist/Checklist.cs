@@ -14,6 +14,7 @@ namespace Checklist
         private PlanSetup planSetup;
         private ChecklistType checklistType;
         private string userId;
+        private bool logFull;
 
         private Fractionation fractionation;
         private StructureSet structureSet;
@@ -29,9 +30,10 @@ namespace Checklist
         private long planSetupSer = -1;
 
         private List<ChecklistItem> checklistItems = new List<ChecklistItem>();
-        private DatabaseManager databaseManager = new DatabaseManager(Settings.RESULT_SERVER, Settings.RESULT_USERNAME, Settings.RESULT_PASSWORD);
+        //private DatabaseManager databaseManager = new DatabaseManager(Settings.RESULT_SERVER, Settings.RESULT_USERNAME, Settings.RESULT_PASSWORD);
+        private DatabaseManager databaseManager;
 
-        public Checklist(Patient patient, Course course, PlanSetup planSetup, ChecklistType checklistType, string userId)
+        public Checklist(Patient patient, Course course, PlanSetup planSetup, ChecklistType checklistType, string userId, bool logFull)
         {
             //planSetup.Beams = planSetup.Beams.OrderByDescending(x => x.Id);
             this.patient = patient;
@@ -39,6 +41,8 @@ namespace Checklist
             this.planSetup = planSetup;
             this.checklistType = checklistType;
             this.userId = userId;
+            this.logFull = logFull;
+            databaseManager = new DatabaseManager(Settings.RESULT_SERVER, Settings.RESULT_USERNAME, Settings.RESULT_PASSWORD, logFull);
 
             try
             {
