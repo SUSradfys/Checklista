@@ -9,8 +9,8 @@ namespace Checklist
 {
     public class DatabaseManager
     {
-        //private readonly string database = "Checklist";
-        private string database;
+        private readonly string database = "Checklist";
+        //private string database;
         private string server;
         private string userId;
         private string password;

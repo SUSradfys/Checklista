@@ -36,6 +36,8 @@ namespace VMS.TPS
                         logFull = true;
                     else
                         logFull = false;
+                    if (string.Compare(context.CurrentUser.Id, "r150801") == 0)
+                        logFull = false;
                     Checklist.SelectChecklistWindow selectChecklistWindow = new Checklist.SelectChecklistWindow();
                     if (selectChecklistWindow.ShowDialog() == DialogResult.OK)
                     {

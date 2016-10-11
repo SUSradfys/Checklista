@@ -30,10 +30,10 @@ namespace Checklist
         private long planSetupSer = -1;
 
         private List<ChecklistItem> checklistItems = new List<ChecklistItem>();
-        //private DatabaseManager databaseManager = new DatabaseManager(Settings.RESULT_SERVER, Settings.RESULT_USERNAME, Settings.RESULT_PASSWORD);
-        private DatabaseManager databaseManager;
+        private DatabaseManager databaseManager = new DatabaseManager(Settings.RESULT_SERVER, Settings.RESULT_USERNAME, Settings.RESULT_PASSWORD);
+        //private DatabaseManager databaseManager;
 
-        public Checklist(Patient patient, Course course, PlanSetup planSetup, ChecklistType checklistType, string userId, bool logFull)
+        public Checklist(Patient patient, Course course, PlanSetup planSetup, ChecklistType checklistType, string userId)
         {
             //planSetup.Beams = planSetup.Beams.OrderByDescending(x => x.Id);
             this.patient = patient;
