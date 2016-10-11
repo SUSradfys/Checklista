@@ -41,7 +41,7 @@ namespace VMS.TPS
                     Checklist.SelectChecklistWindow selectChecklistWindow = new Checklist.SelectChecklistWindow();
                     if (selectChecklistWindow.ShowDialog() == DialogResult.OK)
                     {
-                        Checklist.Checklist checklist = new Checklist.Checklist(context.Patient, context.Course, context.PlanSetup, selectChecklistWindow.ChecklistType, context.CurrentUser.Id, logFull);
+                        Checklist.Checklist checklist = new Checklist.Checklist(context.Patient, context.Course, context.PlanSetup, selectChecklistWindow.ChecklistType, context.CurrentUser.Id);
                         checklist.Analyze();
                     }
                 }
