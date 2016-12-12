@@ -23,20 +23,19 @@ namespace Checklist
                     if (!beam.IsSetupField)
                     {
                         double collimatorAngle = beam.ControlPoints[0].CollimatorAngle;
-                        if (checklistType == ChecklistType.MasterPlanIMRT)
-                        {
-                            if (collimatorAngle == 2)
-                                v1_numberOfPass++;
-                            else if (collimatorAngle > 2 && collimatorAngle < 358)
-                                v1_numberOfWarnings++;
-                        }
-                        else
-                        {
+                        if (treatmentUnitManufacturer == TreatmentUnitManufacturer.Varian)
+                        { 
                             if (collimatorAngle == 5 || collimatorAngle == 355)
                                 v1_numberOfPass++;
                             else if (collimatorAngle > 5 && collimatorAngle < 355)
                                 v1_numberOfWarnings++;
                         }
+                        else if (treatmentUnitManufacturer == TreatmentUnitManufacturer.Elekta)
+                        { 
+                            if (collimatorAngle == 30 || collimatorAngle == 330)
+                                v1_numberOfPass++;
+                        }
+
                         v1_value += (v1_value.Length == 0 ? string.Empty : ", ") + beam.Id + ": " + collimatorAngle.ToString("0.0") + "°";
                     }
                 }
@@ -44,7 +43,7 @@ namespace Checklist
                     v1_status = AutoCheckStatus.PASS;
                 else if (v1_numberOfPass + v1_numberOfWarnings == numberOfTreatmentBeams)
                     v1_status = AutoCheckStatus.WARNING;
-                checklistItems.Add(new ChecklistItem("V1. Kollimatorvinkeln är lämplig", "Kontrollera att kollimatorvinkeln är lämplig\r\n  • VMAT: vanligtvis 5° grader resp. 355°, men passar detta ej PTV är andra vinklar ok (dock ej vinklar mellan 355° och 5°)", v1_value, v1_status));
+                checklistItems.Add(new ChecklistItem("V1. Kollimatorvinkeln är lämplig", "Kontrollera att kollimatorvinkeln är lämplig\r\n  • Varian: vanligtvis 5° resp. 355°, men passar detta ej PTV är andra vinklar ok (dock ej vinklar mellan 355° och 5°)\r\n  • Elekta: 30° resp. 330°", v1_value, v1_status));
                                 
                 if (checklistType == ChecklistType.EclipseVMAT)
                 {

@@ -85,7 +85,7 @@ namespace Checklist
                 SelectChecklistWindow selectChecklistWindow = new SelectChecklistWindow();
                 if (selectChecklistWindow.ShowDialog() == DialogResult.OK)
                 {
-                    Checklist checklist = new Checklist((Patient)textBoxPatient.Tag, (Course)listBoxCourses.SelectedItem, (PlanSetup)listBoxPlans.SelectedItem, selectChecklistWindow.ChecklistType, "r150801");
+                    Checklist checklist = new Checklist((Patient)textBoxPatient.Tag, (Course)listBoxCourses.SelectedItem, (PlanSetup)listBoxPlans.SelectedItem, selectChecklistWindow.ChecklistType, "r150801", true);
                     checklist.Analyze();
                 }
             }

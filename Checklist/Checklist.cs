@@ -33,7 +33,7 @@ namespace Checklist
         private DatabaseManager databaseManager = new DatabaseManager(Settings.RESULT_SERVER, Settings.RESULT_USERNAME, Settings.RESULT_PASSWORD);
         //private DatabaseManager databaseManager;
 
-        public Checklist(Patient patient, Course course, PlanSetup planSetup, ChecklistType checklistType, string userId)
+        public Checklist(Patient patient, Course course, PlanSetup planSetup, ChecklistType checklistType, string userId, bool logFull)
         {
             //planSetup.Beams = planSetup.Beams.OrderByDescending(x => x.Id);
             this.patient = patient;
@@ -41,7 +41,8 @@ namespace Checklist
             this.planSetup = planSetup;
             this.checklistType = checklistType;
             this.userId = userId;
-            databaseManager = new DatabaseManager(Settings.RESULT_SERVER, Settings.RESULT_USERNAME, Settings.RESULT_PASSWORD, logFull);
+            this.logFull = logFull;
+            databaseManager = new DatabaseManager(Settings.RESULT_SERVER, Settings.RESULT_USERNAME, Settings.RESULT_PASSWORD);
 
             try
             {
@@ -86,6 +87,10 @@ namespace Checklist
             try
             {
                 AriaInterface.Connect();
+                // turn this into a method later on
+                DataTable prescription = AriaInterface.Query("select PrescriptionSer from PlanSetup where PlanSetupSer=" + planSetupSer.ToString() + " and PrescriptionSer is not null");
+                if (prescription.Rows.Count == 0)
+                    throw new IndexOutOfRangeException("Kritiskt fel: Ordination saknas.");
                 U();
                 I();
                 D();
@@ -99,6 +104,12 @@ namespace Checklist
                 foreach (ChecklistItem checklistItem in checklistItems)
                     if (string.Compare(checklistItem.AutoCheckStatus, AutoCheckStatus.PASS.ToString()) == 0)
                         checklistItem.Status = true;
+
+                if (!logFull)  // Only keep checks with status warning or fail
+                {
+                    List<string> keepers = new List<string> { "WARNING", "FAIL" , "NONE"};
+                    checklistItems = GetSlimList(checklistItems, keepers);
+                }
 
                 long checklistSer = databaseManager.SaveResult(userId, patient.Id, patient.FirstName, patient.LastName, patientSer, course.Id, courseSer, planSetup.Id, planSetupSer, checklistItems.ToArray());
 

@@ -24,17 +24,6 @@ namespace Checklist
             this.password = password;
         }
 
-        public DatabaseManager(string server, string userId, string password, bool logFull)
-        {
-            this.server = server;
-            this.userId = userId;
-            this.password = password;
-            if (logFull)
-                database = "Checklist";
-            else
-                database = "MinimalCheck";
-        }
-
         public bool CreateDatabase()
         {
             Exception exception = null;
