@@ -22,11 +22,13 @@ namespace Checklist
             DataTable history = AriaInterface.Query("SELECT DISTINCT HistoricalStatus=Approval.Status, HistoricalStatusDate=Approval.StatusDate, HistoricalStatusUserId=Approval.StatusUserName, HistoricalStatusUserName=CONCAT((SELECT DISTINCT Staff.AliasName FROM Staff WHERE Staff.StaffId=Approval.StatusUserName), (SELECT DISTINCT Doctor.AliasName FROM Doctor WHERE Doctor.DoctorId=Approval.StatusUserName)) FROM Approval, PlanSetup, Staff WHERE PlanSetup.PlanSetupSer=Approval.TypeSer AND Approval.ApprovalType='PlanSetup' and PlanSetup.PlanSetupSer = '" + planSetupSer.ToString() + "' ORDER BY HistoricalStatusDate");
             if (history.Rows.Count > 0)
                 p1_value_detail += "Historisk Status\tTid\t\t\tUserId\tUserName\r\n";
+            DataRow lastRow = history.Rows[history.Rows.Count - 1]; // except status from last row, since it will be added explicitly
             foreach (DataRow row in history.Rows)
             {
                 if (String.Equals((string)row["HistoricalStatus"], "Reviewed"))
                     reviewed = true;
-                p1_value += (string)row["HistoricalStatus"] + ", ";
+                if (row != lastRow)
+                    p1_value += (string)row["HistoricalStatus"] + ", ";
                 p1_value_detail += (string)row["HistoricalStatus"] + "\t" + row["HistoricalStatusDate"].ToString() + "\t" + (string)row["HistoricalStatusUserId"];
                 if (row["HistoricalStatusUserName"] == DBNull.Value)
                     p1_value_detail += "\r\n";
@@ -35,12 +37,18 @@ namespace Checklist
             }
             p1_value += planSetup.ApprovalStatus.ToString();
             if (String.Equals(planSetup.ApprovalStatus.ToString(), "PlanningApproved") == false)
+            { 
                 p1_status = AutoCheckStatus.FAIL;
+                p1_value += ", planen har fel status";
+            }
             else if (reviewed == false)
+            { 
                 p1_status = AutoCheckStatus.FAIL;
+                p1_value += ", planen är inte Reviewed";
+            }
             else
             {
-                if (history.Rows.Count == 2 && String.Equals((string)history.Rows[1]["HistoricalStatus"], "Reviewed"))
+                if (history.Rows.Count == 3 && String.Equals((string)history.Rows[1]["HistoricalStatus"], "Reviewed"))
                     p1_status = AutoCheckStatus.PASS;
             }
             if (String.IsNullOrEmpty(p1_value_detail) == true)
@@ -346,8 +354,39 @@ namespace Checklist
                 {
                     AutoCheckStatus p10_status = AutoCheckStatus.UNKNOWN;
                     string p10_value = ElektaMLCCheck(planSetup);
-                    p10_status = CheckResult(String.Compare(p10_value, "MLC positioner OK.", true) == 0);
+                    //p10_status = CheckResult(String.Compare(p10_value, "MLC positioner OK.", true) == 0);
+                    if (String.Compare(p10_value, "Fält levererbara.", true) == 0)
+                        p10_status = AutoCheckStatus.PASS;
+                    if (p10_value.IndexOf("ej levererbara") > 0)
+                        p10_status = AutoCheckStatus.FAIL;
+                    if (p10_status == AutoCheckStatus.WARNING)
+                    {
+                        var p10_values = p10_value.Split('.').ToList();
+                        p10_values[1] = reorderBeamParam(p10_values[1], ",");
+                        p10_value = String.Join<string>(". ", p10_values);
+                    }
+
                     checklistItems.Add(new ChecklistItem("P10. MLC:n är indragen till X-bländare, och ett/två blad är öppna utanför Y-bländare", "Kontrollera att MLC:n är indragen till X-bländare eller innanför, och att ett helt bladpar är öppet utanför Y-bländare på resp. sida om Y1 resp. Y2 har decimal 0,7, 0,8 eller 0,9.", p10_value, p10_status));
+                }
+                else if (treatmentUnitManufacturer == TreatmentUnitManufacturer.Varian)
+                {
+                    AutoCheckStatus p10_status = AutoCheckStatus.UNKNOWN;
+                    string p10_value = string.Empty;
+                    foreach (Beam beam in planSetup.Beams)
+                    {
+                        string MLCcheck = VarianMLCCheck(beam);
+                        if (MLCcheck.Length > 0)
+                            p10_value += (p10_value.Length == 0 ? string.Empty : ", ") + beam.Id + ": " + VarianMLCCheck(beam);
+                    }
+                    if (p10_value.Length > 0)
+                    {
+                        p10_status = AutoCheckStatus.WARNING;
+                        p10_value = reorderBeamParam(p10_value, ",");
+
+                    }
+                    else
+                        p10_status = AutoCheckStatus.PASS;
+                    checklistItems.Add(new ChecklistItem("P10. MLC:n är indragen till X-bländare", "Kontrollera att MLC:n är indragen till X-bländare eller innanför", p10_value, p10_status));
                 }
             }
 

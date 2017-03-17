@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
+using System.Windows.Forms;
 using VMS.TPS.Common.Model.API;
 
 namespace Checklist
@@ -43,6 +45,10 @@ namespace Checklist
                 {
                     x2_value += ", Mät position manuellt";
                 }
+                else if (string.Compare(image.Series.ImagingDeviceId, "PET/CT 02") == 0)
+                {
+                    x2_value += ", Mät position manuellt";
+                }
             }
             checklistItems.Add(new ChecklistItem("X2. Förväntad britshöjd räknas ut och läggs in i Aria", "Räkna ut förväntad britshöjd och lägg in i Aria (på alla fält, inklusive setup-fält) i modulen Treatment Preparation i rutan för Couch Vrt:\r\n• Eclipse: -DICOM offset Z - isocenter Z + offset cm\r\n• Offset är 7,1 cm för CT_A, CT_B, CT_C\r\n• Observera att vid för prone byter DICOM-koordinaten tecken\r\n• Observera risk för kollision mellan gantry och bord vid Vrt < -30 cm\r\nVid SSD-teknik:\r\n  • Ska tjockleken på eventuell vacuumpåse bestämmas genom mätning i CT-bilderna och antecknas under Setup note\r\n  • Räkna ut förflyttning från fältet närmast 0° till övriga fält (Isocenterkoordinat för ursprungsfältet minus övriga fälts isocenterkoordinater) och anteckna detta på sida 2 i behandlingsprotokollet. Exempel: Relativ förflyttning från fält 1 till fält 2: ∆Vrt=25,0 cm.\r\n  • Skriv följande under Setup note: ”FHA-beh. Ring fysiker vid start.”", x2_value, x2_status));
             //checklistItems.Add(new ChecklistItem("X2. Förväntad britshöjd räknas ut och läggs in i Aria", "Räkna ut förväntad britshöjd och lägg in i Aria (på alla fält, inklusive setup-fält) i modulen Treatment Preparation i rutan för Couch Vrt:\r\n• Eclipse: -DICOM offset Z - isocenter Z + offset cm\r\nMasterPlan: -TPRP coordinate Z - isocenter Z + offset cm\r\n• Offset är 7,1 cm för CT_A, CT_B, CT_C och -17,5 för PET/CT 01 (kan dock variera beroende på britshöjd vid PET-undersökningen)\r\n• Observera risk för kollision mellan gantry och bord vid Vrt < -30 cm\r\nVid SSD-teknik:\r\n  • Ska tjockleken på eventuell vacuumpåse bestämmas genom mätning i CT-bilderna och antecknas under Setup note\r\n  • Räkna ut förflyttning från fältet närmast 0° till övriga fält (Isocenterkoordinat för ursprungsfältet minus övriga fälts isocenterkoordinater) och anteckna detta på sida 2 i behandlingsprotokollet. Exempel: Relativ förflyttning från fält 1 till fält 2: ∆Vrt=25,0 cm.\r\n  • Skriv följande under Setup note: ”FHA-beh. Ring fysiker vid start.”", x2_value, x2_status));
@@ -50,7 +56,18 @@ namespace Checklist
 
             if (checklistType == ChecklistType.EclipseVMAT && GetVMATCoplanar(planSetup) == false)
             {
-                checklistItems.Add(new ChecklistItem("X3. Notera icke coplanar VMAT under Setup note", "Planen i fråga är en icke coplanar VMAT behandling. Säkerställ att en notering om detta finns under planens Setup note", string.Empty, AutoCheckStatus.MANUAL));
+                // check that setup note for beam "Uppl*gg" contains the string
+                AutoCheckStatus x3_status = AutoCheckStatus.FAIL;
+                string defSetup = "OBS! Icke-coplanar behandling (britsrotation). Använd NC-plattan som förlängning av britsen.";
+                DataTable setupNote = AriaInterface.Query("select SetupNote from Radiation where PlanSetupSer=" + planSetupSer.ToString() + " and UPPER(RadiationId) like 'UPPL%GG'");
+                foreach (DataRow row in setupNote.Rows)
+                    {
+                        if (row["SetupNote"].ToString().IndexOf(defSetup) >= 0)
+                        x3_status = AutoCheckStatus.PASS;
+                    }
+                    if (x3_status == AutoCheckStatus.FAIL)
+                        Clipboard.SetText(defSetup + "\r\n");
+                checklistItems.Add(new ChecklistItem("X3. Notera icke coplanar VMAT under Setup note", "Planen i fråga är en icke coplanar VMAT behandling. Säkerställ att en notering om detta finns under planens Setup note. Den exakta formuleringen ska vara: \r\n" + defSetup, string.Empty, x3_status));
             }
 
             if (checklistType == ChecklistType.Eclipse || checklistType == ChecklistType.EclipseGating)

@@ -24,6 +24,7 @@ namespace Checklist
             bool ElektaTest = false;
 
             CheckMLC checkMlCcurr = new CheckMLC();
+            CheckMLC leafPosition = new CheckMLC();
             int bmFailCount = 0;
 
             //Check the mlc positions for each beam/colmtrol point
@@ -68,7 +69,12 @@ namespace Checklist
                             beamCpDebuglist.Clear();
                             debugList.Clear();
 
-
+                            //Check that MLC is aligned to collimator
+                            debugList = checkMlCcurr.CheckAlignment(cp.LeafPositions, cp.JawPositions.Y1, cp.JawPositions.Y2, cp.JawPositions.X1, cp.JawPositions.X2);
+                            for (int i = 0; i < debugList.Count(); i++)
+                                debugList[i] = bm.Id + debugList[i];
+                            leafPosition.DebugMess.AddRange(debugList);
+                            debugList.Clear();
                         }
                         cpCount++;
                     }//foreach cp
@@ -96,11 +102,20 @@ namespace Checklist
 
                 if (checkMlCcurr.DebugMess.Any())
                 {
-                    outString = "MLC positioner inte OK: Kör separat scrpt för detaljerad information.";
+                    outString = "Fält ej levererbara: Kör separat scrpt för detaljerad information.";
                 }
                 else
                 {
-                    outString = "MLC positioner OK.";
+                    outString = "Fält levererbara";
+                    if (leafPosition.DebugMess.Any())
+                    {
+                        outString += ", men ej optimala. ";
+
+                        foreach (string item in leafPosition.DebugMess)
+                            outString += " " + item;
+                    }
+                    else
+                        outString += ".";
                 }
             }
 
@@ -347,7 +362,57 @@ namespace Checklist
             return debugList;
         }//method
 
+        /// <summary>
+        /// Takes the mlc and colliamtor position and checks the extreme-most MLC (within the field) is aligned with the collimator
+        /// Return failed
+        /// </summary>
+        /// <param name="mlc"></param>
+        /// <param name="collY1"></param>
+        /// <param name="collY2"></param>
+        /// <param name="collX1"></param>
+        /// <param name="collX2"></param>
+        /// <returns></returns>
+        public List<string> CheckAlignment(float[,] mlc, double collY1, double collY2, double collX1, double collX2)
+        {
+            double tolerance = 1.0; // allow a tolerance of 1 mm
+            List<string> debugList = new List<string>();
+            collY1 = Math.Round(collY1, 2);
+            collY2 = Math.Round(collY2, 2);
+            collX1 = Math.Round(collX1, 2);
+            collX2 = Math.Round(collX2, 2);
 
+            //Y1 goes from postion 0 to 20, Y2 from 20-39
+            int posLeafY1 = (int)(20 + Math.Floor(collY1 * mmToCm)); //20 + -20 (to) 0 => 0-20
+            int posLeafY2 = (int)(19 + Math.Ceiling(collY2 * mmToCm)); //19-39 in mlc
+
+            double decLeafY1 = Math.Round(collY1 * mmToCm - Math.Floor(collY1 * mmToCm), 2);
+            double decLeafY2 = Math.Round(Math.Ceiling(collY2 * mmToCm) - collY2 * mmToCm, 2);
+
+            if (decLeafY1 <= CollimatorLeafopen)
+                posLeafY1 = Math.Max(0, posLeafY1 - 1);
+            if (decLeafY2 <= CollimatorLeafopen)
+                posLeafY2 = Math.Max(0, posLeafY2 + 1);
+
+            // fix so we are always betweey 0 and mlc.GetLength(1)-1
+            if (posLeafY1 < 0)
+                posLeafY1 = 0;
+            if (posLeafY2 >= mlc.GetLength(1))
+                posLeafY2 = mlc.GetLength(1) - 1;
+
+            // check that max(MLC opening) + tolerace >= collimator && MLC opening <= collimator
+            double min_X1 = mlc[0, posLeafY1];
+            double max_X2 = mlc[1, posLeafY1];
+            for (int i = posLeafY1; i <= posLeafY2; i++)
+            {
+                min_X1 = Math.Min(min_X1, mlc[0, i]);
+                max_X2 = Math.Max(max_X2, mlc[1, i]);
+            }
+            if (min_X1 + tolerance < collX1 || max_X2 - tolerance > collX2)
+                debugList.Add(": MLC utanför kollimator, ");
+            if (min_X1 - tolerance > collX1 || max_X2 + tolerance < collX2)
+                debugList.Add(": MLC inte i linje med kollimator, ");
+            return debugList;
+        }//method
 
         /// <summary>
         /// Check if the machine is an elekta, return true if
