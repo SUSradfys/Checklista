@@ -46,7 +46,8 @@ namespace Checklist
 
             try
             {
-                databaseManager.CreateDatabase();
+                // Uncommented since it leads to timeout
+                //databaseManager.CreateDatabase();
             }
             catch
             {

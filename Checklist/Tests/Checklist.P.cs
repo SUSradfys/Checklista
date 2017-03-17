@@ -340,16 +340,21 @@ namespace Checklist
             p9_value_detailed = reorderBeamParam(p9_value_detailed, "\r\n\r\n");
             checklistItems.Add(new ChecklistItem("P9. Fälten ser rimliga ut vad gäller form, energi, MU och korrektion av artefakter", "Kontrollera att fälten ser rimliga ut vad gäller form, energi, MU och korrektion av artefakter\r\n  • Riktlinje för RapidArc är max 300 MU/Gy om bländarna är utanför target under hela varvet (sett ur BEV). Vid delvis skärmat target är denna gräns max 550 MU/Gy.\r\n  • Öppna fält ska ha ≥10 MU.\r\n  • Fält med dynamisk kil (Varian) ska ha minst 20 MU.\r\n  • Fält med fast kil (Elekta) ska ha ≥30 kilade MU.\r\n  •  För Elekta gäller dessutom att totala antalet MU per fält (öppet + kilat) ej får överstiga 999 MU.", p9_value, p9_value_detailed, p9_status));
 
-            if (treatmentUnitManufacturer == TreatmentUnitManufacturer.Elekta)
-            {
-                AutoCheckStatus p10_status = AutoCheckStatus.UNKNOWN;
-                string p10_value = ElektaMLCCheck(planSetup);
-                p10_status = CheckResult(String.Compare(p10_value, "MLC positioner OK.", true) == 0);
-                checklistItems.Add(new ChecklistItem("P10. MLC:n är indragen till X-bländare, och ett/två blad är öppna utanför Y-bländare", "Kontrollera att MLC:n är indragen till X-bländare eller innanför, och att ett helt bladpar är öppet utanför Y-bländare på resp. sida om Y1 resp. Y2 har decimal 0,7, 0,8 eller 0,9.", p10_value, p10_status));
+            if (checklistType != ChecklistType.EclipseVMAT)
+            { 
+                if (treatmentUnitManufacturer == TreatmentUnitManufacturer.Elekta)
+                {
+                    AutoCheckStatus p10_status = AutoCheckStatus.UNKNOWN;
+                    string p10_value = ElektaMLCCheck(planSetup);
+                    p10_status = CheckResult(String.Compare(p10_value, "MLC positioner OK.", true) == 0);
+                    checklistItems.Add(new ChecklistItem("P10. MLC:n är indragen till X-bländare, och ett/två blad är öppna utanför Y-bländare", "Kontrollera att MLC:n är indragen till X-bländare eller innanför, och att ett helt bladpar är öppet utanför Y-bländare på resp. sida om Y1 resp. Y2 har decimal 0,7, 0,8 eller 0,9.", p10_value, p10_status));
+                }
             }
 
             string p11_value = "Metod: " + planSetup.PlanNormalizationMethod + ", target: " + planSetup.TargetVolumeID + ", prescribed percentage: " + (planSetup.PrescribedPercentage * 100.0).ToString("0.0") + ", värde: " + planSetup.PlanNormalizationValue.ToString("0.0");
             AutoCheckStatus p11_status = AutoCheckStatus.MANUAL;
+            if (planSetup.PlanNormalizationMethod.Equals("No plan normalization", StringComparison.OrdinalIgnoreCase))
+                p11_status = AutoCheckStatus.FAIL;
             double normLimitVMAT = 3.0;
             if (checklistType == ChecklistType.EclipseVMAT && Math.Abs(planSetup.PlanNormalizationValue - 100) > normLimitVMAT)
             {

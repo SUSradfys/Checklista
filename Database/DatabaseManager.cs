@@ -64,7 +64,7 @@ namespace Checklist
             long checklistSer = -1;
             try
             {
-                using (SqlConnection sqlConnection = new SqlConnection(@"Server=" + server + "; database=" + database + "; User ID='" + this.userId + "'; Pwd='" + password + "'"))
+                using (SqlConnection sqlConnection = new SqlConnection(@"Server=tcp:" + server + ", 1433; database=" + database + "; User ID='" + this.userId + "'; Pwd='" + password + "'" + "; Connection Timeout=300"))
                 {
                     sqlConnection.Open();
                     using (SqlTransaction transaction = sqlConnection.BeginTransaction())

@@ -145,7 +145,7 @@ namespace Checklist
                     if (fractionation != null)
                     {
                         r4_value += (r4_value == null ? "Ordination: - , " : ", ") + "Planerat: " + fractionation.PrescribedDosePerFraction.ToString() + " * " + fractionation.NumberOfFractions.ToString() + " = " + planSetup.TotalPrescribedDose.ToString();
-                        r4_status = CheckResult(numberOfFractions == fractionation.NumberOfFractions && dosePerFraction == fractionation.PrescribedDosePerFraction.Dose && totalDose == planSetup.TotalPrescribedDose.Dose);
+                        r4_status = CheckResult(numberOfFractions == fractionation.NumberOfFractions && Math.Round(dosePerFraction, 3) == Math.Round(fractionation.PrescribedDosePerFraction.Dose, 3) && Math.Round(totalDose, 3) == Math.Round(planSetup.TotalPrescribedDose.Dose, 3));
                     }
                 }
                 else

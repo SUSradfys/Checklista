@@ -82,10 +82,13 @@ namespace Checklist
                             structure.GetAssignedHU(out couchInteriorHU);
                     }
                 }
-            }            
-            if (treatmentUnitManufacturer == TreatmentUnitManufacturer.Varian && string.Compare(couchModel, "Exact IGRT Couch, medium") == 0 && couchInteriorHU == -950 && couchSurfaceHU == -300)
+            }
+            // If a patient have had a support structure connected in a previous course, the name of that structure will be maintained even though it is obsolete.
+            // Specifically: The substring "Top" was part of the name in 13.0, but disappeared in 13.6. Returning patient treated during 13.0 will have that substring retained.
+            // Solution. Replace(" Top".String.Empty)
+            if (treatmentUnitManufacturer == TreatmentUnitManufacturer.Varian && string.Compare(couchModel.Replace(" Top", String.Empty), "Exact IGRT Couch, medium") == 0 && couchInteriorHU == -950 && couchSurfaceHU == -300)
                 d5_status = AutoCheckStatus.PASS;
-            else if (treatmentUnitManufacturer == TreatmentUnitManufacturer.Elekta && string.Compare(couchModel, "BrainLAB/iBeam Couch") == 0 && couchInteriorHU == -950 && couchSurfaceHU == -300)
+            else if (treatmentUnitManufacturer == TreatmentUnitManufacturer.Elekta && string.Compare(couchModel.Replace(" Top", String.Empty), "BrainLAB/iBeam Couch") == 0 && couchInteriorHU == -950 && couchSurfaceHU == -300)
                 d5_status = AutoCheckStatus.PASS;
             else if (couchModel.Length == 0)
             {
