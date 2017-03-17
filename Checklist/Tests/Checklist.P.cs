@@ -19,14 +19,16 @@ namespace Checklist
             string p1_value_detail = string.Empty;
             bool reviewed = false;
             AutoCheckStatus p1_status = AutoCheckStatus.MANUAL; //CheckResult(planSetup.ApprovalStatus == PlanSetupApprovalStatus.PlanningApproved);
-            DataTable history = AriaInterface.Query("SELECT DISTINCT HistoricalStatus=Approval.Status, HistoricalStatusDate=Approval.StatusDate, HistoricalStatusUserId=Approval.StatusUserName, HistoricalStatusUserName=CONCAT((SELECT DISTINCT Staff.AliasName FROM Staff WHERE Staff.StaffId=Approval.StatusUserName), (SELECT DISTINCT Doctor.AliasName FROM Doctor WHERE Doctor.DoctorId=Approval.StatusUserName)) FROM Approval, PlanSetup, Staff WHERE PlanSetup.PlanSetupSer=Approval.TypeSer AND Approval.ApprovalType='PlanSetup' and PlanSetup.PlanSetupSer = '" + planSetupSer.ToString() + "' ORDER BY HistoricalStatusDate");
+            DataTable history = AriaInterface.Query("SELECT DISTINCT HistoricalStatus=Approval.Status, HistoricalStatusDate=Approval.StatusDate, HistoricalStatusUserId=Approval.StatusUserName, HistoricalStatusUserName=CONCAT((SELECT DISTINCT Staff.AliasName FROM Staff WHERE Staff.StaffId=Approval.StatusUserName), (SELECT DISTINCT Doctor.AliasName FROM Doctor WHERE Doctor.DoctorId=Approval.StatusUserName)) FROM Approval, PlanSetup, Staff WHERE PlanSetup.PlanSetupSer=Approval.TypeSer AND Approval.ApprovalType='PlanSetup' and PlanSetup.PlanSetupSer = '" + planSetupSer.ToString() + "' UNION SELECT DISTINCT HistoricalStatus=PlanSetup.Status, HistoricalStatusDate=PlanSetup.StatusDate, HistoricalStatusUserId=PlanSetup.StatusUserName, HistoricalStatusUserName=CONCAT((SELECT DISTINCT Staff.AliasName FROM Staff WHERE Staff.StaffId=PlanSetup.StatusUserName), (SELECT DISTINCT Doctor.AliasName FROM Doctor WHERE Doctor.DoctorId=PlanSetup.StatusUserName)) FROM PlanSetup WHERE PlanSetup.PlanSetupSer= '" + planSetupSer.ToString() + "' ORDER BY HistoricalStatusDate");
             if (history.Rows.Count > 0)
                 p1_value_detail += "Historisk Status\tTid\t\t\tUserId\tUserName\r\n";
+            DataRow lastRow = history.Rows[history.Rows.Count - 1]; // except status from last row, since it will be added explicitly
             foreach (DataRow row in history.Rows)
             {
                 if (String.Equals((string)row["HistoricalStatus"], "Reviewed"))
                     reviewed = true;
-                p1_value += (string)row["HistoricalStatus"] + ", ";
+                if (row != lastRow)  // except status from last row
+                    p1_value += (string)row["HistoricalStatus"] + ", ";
                 p1_value_detail += (string)row["HistoricalStatus"] + "\t" + row["HistoricalStatusDate"].ToString() + "\t" + (string)row["HistoricalStatusUserId"];
                 if (row["HistoricalStatusUserName"] == DBNull.Value)
                     p1_value_detail += "\r\n";
@@ -35,12 +37,18 @@ namespace Checklist
             }
             p1_value += planSetup.ApprovalStatus.ToString();
             if (String.Equals(planSetup.ApprovalStatus.ToString(), "PlanningApproved") == false)
+            {
                 p1_status = AutoCheckStatus.FAIL;
+                p1_value += ", planen har fel status";
+            }
             else if (reviewed == false)
+            { 
                 p1_status = AutoCheckStatus.FAIL;
+                p1_value += ", planen är inte Reviewed";
+            }
             else
             {
-                if (history.Rows.Count == 2 && String.Equals((string)history.Rows[1]["HistoricalStatus"], "Reviewed"))
+                if (history.Rows.Count == 3 && String.Equals((string)history.Rows[1]["HistoricalStatus"], "Reviewed"))
                     p1_status = AutoCheckStatus.PASS;
             }
             if (String.IsNullOrEmpty(p1_value_detail) == true)
@@ -142,7 +150,7 @@ namespace Checklist
 
                 checklistItems.Add(new ChecklistItem("P3. Beam on-tiderna är korrekta", "Kontrollera att fälten är tilldelade korrekta beam on-tider:\r\n  • 0.5 min för FFF fält med <600 MU\r\n  • 1 min för öppna fält med <=500 MU och kilfält med <=300 MU\r\n  • 2 min för öppna fält med >500 MU, kilfält med >300 MU, och RapidArc (<=400 MU/arc)\r\n  • 3 min för RA (>400 MU/arc)\r\n  • 5 min för gating", p3_value, p3_status));
             }
-
+            
             // Will now use information from Prescription rather than verifying against ChecklistType
             string p4_value = string.Empty;
             AutoCheckStatus p4_status = AutoCheckStatus.FAIL;
@@ -186,6 +194,7 @@ namespace Checklist
                 p4_value = "Ej ikryssad";
             }
             */
+
             checklistItems.Add(new ChecklistItem("P4. Use Gated är korrekt", "Kontrollera att rutan Use Gated under Plan properties svarar mot ordination.", p4_value, p4_status));
 
             if (checklistType == ChecklistType.EclipseGating)
@@ -340,14 +349,45 @@ namespace Checklist
             p9_value_detailed = reorderBeamParam(p9_value_detailed, "\r\n\r\n");
             checklistItems.Add(new ChecklistItem("P9. Fälten ser rimliga ut vad gäller form, energi, MU och korrektion av artefakter", "Kontrollera att fälten ser rimliga ut vad gäller form, energi, MU och korrektion av artefakter\r\n  • Riktlinje för RapidArc är max 300 MU/Gy om bländarna är utanför target under hela varvet (sett ur BEV). Vid delvis skärmat target är denna gräns max 550 MU/Gy.\r\n  • Öppna fält ska ha ≥10 MU.\r\n  • Fält med dynamisk kil (Varian) ska ha minst 20 MU.\r\n  • Fält med fast kil (Elekta) ska ha ≥30 kilade MU.\r\n  •  För Elekta gäller dessutom att totala antalet MU per fält (öppet + kilat) ej får överstiga 999 MU.", p9_value, p9_value_detailed, p9_status));
 
-            if (treatmentUnitManufacturer == TreatmentUnitManufacturer.Elekta)
+            if (checklistType != ChecklistType.EclipseVMAT)
             {
-                AutoCheckStatus p10_status = AutoCheckStatus.UNKNOWN;
-                string p10_value = ElektaMLCCheck(planSetup);
-                p10_status = CheckResult(String.Compare(p10_value, "MLC positioner OK.", true) == 0);
-                checklistItems.Add(new ChecklistItem("P10. MLC:n är indragen till X-bländare, och ett/två blad är öppna utanför Y-bländare", "Kontrollera att MLC:n är indragen till X-bländare eller innanför, och att ett helt bladpar är öppet utanför Y-bländare på resp. sida om Y1 resp. Y2 har decimal 0,7, 0,8 eller 0,9.", p10_value, p10_status));
+                if (treatmentUnitManufacturer == TreatmentUnitManufacturer.Elekta)
+                { 
+                    AutoCheckStatus p10_status = AutoCheckStatus.WARNING;
+                    string p10_value = ElektaMLCCheck(planSetup);
+                    //p10_status = CheckResult(String.Compare(p10_value, "MLC positioner OK.", true) == 0);
+                    if (String.Compare(p10_value, "Fält levererbara.", true) == 0)
+                        p10_status = AutoCheckStatus.PASS;
+                    if (p10_value.IndexOf("ej levererbara") > 0)
+                        p10_status = AutoCheckStatus.FAIL;
+                    if (p10_status == AutoCheckStatus.WARNING)
+                    {
+                        var p10_values =  p10_value.Split('.').ToList();
+                        p10_values[1] = reorderBeamParam(p10_values[1], ",");
+                        p10_value = String.Join<string>(". ", p10_values);
+                    }
+                    checklistItems.Add(new ChecklistItem("P10. MLC:n är indragen till X-bländare, och ett/två blad är öppna utanför Y-bländare", "Kontrollera att MLC:n är indragen till X-bländare eller innanför, och att ett helt bladpar är öppet utanför Y-bländare på resp. sida om Y1 resp. Y2 har decimal 0,7, 0,8 eller 0,9.", p10_value, p10_status));
+                }
+                else if (treatmentUnitManufacturer == TreatmentUnitManufacturer.Varian)
+                {
+                    AutoCheckStatus p10_status = AutoCheckStatus.UNKNOWN;
+                    string p10_value = string.Empty;
+                    foreach (Beam beam in planSetup.Beams)
+                    { 
+                        string MLCcheck = VarianMLCCheck(beam);
+                        if (MLCcheck.Length > 0)
+                            p10_value += (p10_value.Length == 0 ? string.Empty : ", ") + beam.Id + ": " + VarianMLCCheck(beam);
+                    }
+                    if (p10_value.Length > 0)
+                    {
+                        p10_status = AutoCheckStatus.WARNING;
+                        p10_value = reorderBeamParam(p10_value, ",");
+                    }
+                    else
+                        p10_status = AutoCheckStatus.PASS;
+                    checklistItems.Add(new ChecklistItem("P10. MLC:n är indragen till X-bländare", "Kontrollera att MLC:n är indragen till X-bländare eller innanför", p10_value, p10_status));
+                }
             }
-
             string p11_value = "Metod: " + planSetup.PlanNormalizationMethod + ", target: " + planSetup.TargetVolumeID + ", prescribed percentage: " + (planSetup.PrescribedPercentage * 100.0).ToString("0.0") + ", värde: " + planSetup.PlanNormalizationValue.ToString("0.0");
             AutoCheckStatus p11_status = AutoCheckStatus.MANUAL;
             double normLimitVMAT = 3.0;
@@ -356,7 +396,6 @@ namespace Checklist
                 p11_status = AutoCheckStatus.FAIL;
             }
             checklistItems.Add(new ChecklistItem("P11. Normering är korrekt", "Kontrollera att planen är normerad på korrekt vis \r\n  • Normalt till targetvolymens medeldos (om särskilt skäl föreligger kan en punktnormering användas). \r\n  • För stereotaktiska lungor i Eclipse normeras dosen till isocenter och ordineras till 75%-isodosen.\r\n  • För VMAT ska Plan Normalization Value skall normeringsvärdet vara i intervallet [0.970, 1.030].", p11_value, p11_status));
-
             string p12_value = string.Empty;            
             string p13_value = string.Empty;
             string p13_value_detailed = string.Empty;

@@ -13,7 +13,7 @@ namespace Checklist
         {
             try
             {
-                using (Application app = Application.CreateApplication(null, null))
+                using (Application app = Application.CreateApplication("r150801", "yl3f7b"))
                 {
                     Execute(app);
                 }

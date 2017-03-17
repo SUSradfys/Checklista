@@ -14,7 +14,7 @@ namespace Checklist
         private PlanSetup planSetup;
         private ChecklistType checklistType;
         private string userId;
-        private bool logFull;
+        private string profession;
 
         private Fractionation fractionation;
         private StructureSet structureSet;
@@ -33,7 +33,7 @@ namespace Checklist
         private DatabaseManager databaseManager = new DatabaseManager(Settings.RESULT_SERVER, Settings.RESULT_USERNAME, Settings.RESULT_PASSWORD);
         //private DatabaseManager databaseManager;
 
-        public Checklist(Patient patient, Course course, PlanSetup planSetup, ChecklistType checklistType, string userId, bool logFull)
+        public Checklist(Patient patient, Course course, PlanSetup planSetup, ChecklistType checklistType, string userId, string profession)
         {
             //planSetup.Beams = planSetup.Beams.OrderByDescending(x => x.Id);
             this.patient = patient;
@@ -41,7 +41,7 @@ namespace Checklist
             this.planSetup = planSetup;
             this.checklistType = checklistType;
             this.userId = userId;
-            this.logFull = logFull;
+            this.profession = profession;
             databaseManager = new DatabaseManager(Settings.RESULT_SERVER, Settings.RESULT_USERNAME, Settings.RESULT_PASSWORD);
 
             try
@@ -87,14 +87,14 @@ namespace Checklist
             try
             {
                 AriaInterface.Connect();
-                // turn this into a method later on
-                DataTable prescription = AriaInterface.Query("select PrescriptionSer from PlanSetup where PlanSetupSer=" + planSetupSer.ToString() + " and PrescriptionSer is not null");
-                if (prescription.Rows.Count == 0)
-                    throw new IndexOutOfRangeException("Kritiskt fel: Ordination saknas.");
+                
+                // check that the plan is connected to a prescription
+                if (CheckPrescription(planSetupSer.ToString()) == false)
+                    throw new DataException("Kritisk fel: Ordniation saknas.");
                 U();
                 I();
                 D();
-                P();                
+                P(); 
                 V();
                 M();
                 B();
@@ -105,11 +105,17 @@ namespace Checklist
                     if (string.Compare(checklistItem.AutoCheckStatus, AutoCheckStatus.PASS.ToString()) == 0)
                         checklistItem.Status = true;
 
-                if (!logFull)  // Only keep checks with status warning or fail
+                switch (profession)
                 {
-                    List<string> keepers = new List<string> { "WARNING", "FAIL" , "NONE"};
-                    checklistItems = GetSlimList(checklistItems, keepers);
+                    case "dpl":
+                        List<string> keepers = new List<string> { "WARNING", "FAIL", "NONE" };
+                        checklistItems = GetSlimList(checklistItems, keepers);
+                        break;
+
+                    default:
+                        break;
                 }
+
 
                 long checklistSer = databaseManager.SaveResult(userId, patient.Id, patient.FirstName, patient.LastName, patientSer, course.Id, courseSer, planSetup.Id, planSetupSer, checklistItems.ToArray());
 

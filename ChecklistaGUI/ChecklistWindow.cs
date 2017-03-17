@@ -82,7 +82,8 @@ namespace Checklist
                         else if (string.Compare(autoCheckStatus, "FAIL") == 0)
                             listViewItem.ForeColor = Color.Red;
                         else if (string.Compare(autoCheckStatus, "WARNING") == 0)
-                            listViewItem.ForeColor = Color.Orange;
+                            listViewItem.ForeColor = Color.Blue;
+                        bool rareCheck = (bool)dataRow["rareCheck"];
                         listViewItem.SubItems.Add((string)dataRow["ShortInfo"]);
                         listViewItem.SubItems[1].Tag = (string)dataRow["DetailedInfo"];
                         listViewItem.SubItems.Add(dataRow["ShortResult"] == DBNull.Value ? string.Empty : (string)dataRow["ShortResult"]);

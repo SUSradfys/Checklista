@@ -4,6 +4,7 @@ using System.Linq;
 using System.Data;
 using System.Text;
 using VMS.TPS.Common.Model.API;
+using System.Windows.Forms;
 
 namespace Checklist
 {
@@ -21,11 +22,12 @@ namespace Checklist
             DataTable remarks = AriaInterface.Query("select Image.ImageNotes from Image, Series where Series.SeriesUID = '" + image.Series.UID.ToString() + "' and Image.SeriesSer = Series.SeriesSer and Image.ImageType = 'Image' and Image.ImageId = '" + image.Id.ToString() + "'");
             if (remarks.Rows.Count == 1 && remarks.Rows[0][0] != DBNull.Value)
             {
-                r1_value_detail = (string)remarks.Rows[0][0];
-                checklistItems.Add(new ChecklistItem("R1. Jämför id (course, plan, CT-set, patient) mellan remiss, protokoll och Aria", "Kontrollera att \r\n  • Patientens personnummer stämmer överens mellan remiss, protokoll och Aria\r\n  • Course, plannamn och CT-set stämmer överens mellan protokoll och Aria.", r1_value, r1_value_detail, AutoCheckStatus.MANUAL));
+                string remark = (string)remarks.Rows[0][0];
+                int count = remark.Select((c, i) => remark.Substring(i)).Count(sub => sub.StartsWith("User"));
+                if (count > 1)
+                    MessageBox.Show(remark, "Aktuella remarks");
             }
-            else
-                checklistItems.Add(new ChecklistItem("R1. Jämför id (course, plan, CT-set, patient) mellan remiss, protokoll och Aria", "Kontrollera att \r\n  • Patientens personnummer stämmer överens mellan remiss, protokoll och Aria\r\n  • Course, plannamn och CT-set stämmer överens mellan protokoll och Aria.", r1_value, AutoCheckStatus.MANUAL));
+            checklistItems.Add(new ChecklistItem("R1. Jämför id (course, plan, CT-set, patient) mellan remiss, protokoll och Aria", "Kontrollera att \r\n  • Patientens personnummer stämmer överens mellan remiss, protokoll och Aria\r\n  • Course, plannamn och CT-set stämmer överens mellan protokoll och Aria.", r1_value, AutoCheckStatus.MANUAL));
 
             AutoCheckStatus r2_status = AutoCheckStatus.FAIL;
             string r2_value = string.Empty;

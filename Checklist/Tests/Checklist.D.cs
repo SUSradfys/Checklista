@@ -83,9 +83,9 @@ namespace Checklist
                     }
                 }
             }            
-            if (treatmentUnitManufacturer == TreatmentUnitManufacturer.Varian && string.Compare(couchModel, "Exact IGRT Couch, medium") == 0 && couchInteriorHU == -950 && couchSurfaceHU == -300)
+            if (treatmentUnitManufacturer == TreatmentUnitManufacturer.Varian && string.Compare(couchModel.Replace(" Top", ""), "Exact IGRT Couch, medium") == 0 && couchInteriorHU == -950 && couchSurfaceHU == -300)
                 d5_status = AutoCheckStatus.PASS;
-            else if (treatmentUnitManufacturer == TreatmentUnitManufacturer.Elekta && string.Compare(couchModel, "BrainLAB/iBeam Couch") == 0 && couchInteriorHU == -950 && couchSurfaceHU == -300)
+            else if (treatmentUnitManufacturer == TreatmentUnitManufacturer.Elekta && string.Compare(couchModel.Replace(" Top", ""), "BrainLAB/iBeam Couch") == 0 && couchInteriorHU == -950 && couchSurfaceHU == -300)
                 d5_status = AutoCheckStatus.PASS;
             else if (couchModel.Length == 0)
             {

@@ -232,101 +232,135 @@ namespace Checklist
                 }
             }
             s5_value = reorderBeamParam(s5_value, ",");
-            checklistItems.Add(new ChecklistItem("S5. Kvalitén på DRR", "Kontrollera att kvalitén på DRR för alla fält som ska ha en DRR är acceptabel.", s5_value, AutoCheckStatus.MANUAL));
+            checklistItems.Add(new ChecklistItem("S5. Kvalitén på DRR samt strukturer för verifikationsbilder", "Kontrollera att: \r\nKvalitén på DRR för alla fält som ska ha en DRR är acceptabel.\r\nStrukturer för verifikatiobilder existerar. För assymetriska mam gäller:\r\n  • Body genererad\r\n  • Lunga genererad\r\n  • Klavikelfäste resp sternum manuellt ritad", s5_value, AutoCheckStatus.MANUAL));
 
-            string s6_value = string.Empty;
-            AutoCheckStatus s6_status = AutoCheckStatus.MANUAL;
-            List<string> s6_tolerances = new List<string>();
+            /*
+            DataTable site = AriaInterface.Query("select Prescription.Site from Prescription, PlanSetup where PlanSetup.PlanSetupSer='" + planSetupSer.ToString() + "' and Prescription.PrescriptionSer=PlanSetup.PrescriptionSer");
+            if (site.Rows[0]["Site"].ToString() == "Thorax" && planSetup.Id.IndexOf("lg") != -1 || site.Rows[0]["Site"].ToString().IndexOf("Mam") == 0 && planSetup.Id.IndexOf("lg") != -1)
+            {
+                string s6_value = string.Empty;
+                string s6_value_detail = string.Empty;
+                AutoCheckStatus s6_status;
+                int s6_numberOfPass = 0;
+                foreach (Beam beam in planSetup.Beams)
+                {
+                    if (beam.IsSetupField)
+                    {
+                        DataTable ContourLayers = AriaInterface.Query("select UserCurve=sum(case when CurveLabel='User' then 1 else 0 end), LungStruct=sum(case when GraphicAnnotationId like 'Lung%' and CurveLabel='Proj Structures' then 1 else 0 end), BodyStruct=sum(case when GraphicAnnotationId = 'BODY' and CurveLabel='Proj Structures' then 1 else 0 end) from Radiation, GraphicAnnotation, GraphicAnnotationType where Radiation.PlanSetupSer='" + planSetupSer.ToString() + "' and Radiation.RadiationId='" + beam.Id + "' and GraphicAnnotation.ImageSer=Radiation.RefImageSer and GraphicAnnotationType.GraphicAnnotationTypeSer=GraphicAnnotation.GraphicAnnotationTypeSer");
+                        if ((int)ContourLayers.Rows[0]["UserCurve"] < 3 || (int)ContourLayers.Rows[0]["LungStruct"] < 1 || (int)ContourLayers.Rows[0]["BodyStruct"] < 1)
+                        {
+                            s6_value += (s6_value.Length == 0 ? "" : ", ") + beam.Id;
+                            s6_value_detail += (s6_value_detail.Length == 0 ? "" : "\r\n") + beam.Id + ":\r\n  • Lunga genererad: " + Convert.ToBoolean((int)ContourLayers.Rows[0]["LungStruct"]).ToString() + "\r\n  • Body genererad: " + Convert.ToBoolean((int)ContourLayers.Rows[0]["BodyStruct"]).ToString() + "\r\n  • Manuellt ritat: " + Convert.ToBoolean((int)ContourLayers.Rows[0]["UserCurve"]).ToString();
+                        }
+                        else
+                            s6_numberOfPass++;
+                    }
+                    else
+                        s6_numberOfPass++;
+                }
+                if (s6_numberOfPass < planSetup.Beams.Count())
+                    s6_status = AutoCheckStatus.FAIL;
+                else
+                    s6_status = AutoCheckStatus.MANUAL;
+
+                checklistItems.Add(new ChecklistItem("S6. Strukturer för verifikationsbilder existerar", "Kontrollera att strukturer för verifikatiobilder existerar. För assymetriska mam:\r\n  • Body genererad\r\n  • Lunga genererad\r\n  • Klavikelfäste resp sternum manuellt ritad", s6_value, s6_value_detail, s6_status));
+            }
+            */
+
+
+            string s7_value = string.Empty;
+            AutoCheckStatus s7_status = AutoCheckStatus.MANUAL;
+            List<string> s7_tolerances = new List<string>();
             foreach (Beam beam in planSetup.Beams)
             {
                 string toleranceId = string.Empty;
                 DataTable toleranceIdTable = AriaInterface.Query("select Tolerance.ToleranceId from Radiation,ExternalFieldCommon,Tolerance where ExternalFieldCommon.RadiationSer=Radiation.RadiationSer and ExternalFieldCommon.ToleranceSer=Tolerance.ToleranceSer and Radiation.PlanSetupSer=" + planSetupSer.ToString() + " and Radiation.RadiationId='" + beam.Id + "'");
                 if (toleranceIdTable.Rows.Count == 1 && toleranceIdTable.Rows[0][0] != DBNull.Value)
-                    s6_tolerances.Add((string)toleranceIdTable.Rows[0][0]);
+                    s7_tolerances.Add((string)toleranceIdTable.Rows[0][0]);
                 else
-                    s6_tolerances.Add("Saknas");
+                    s7_tolerances.Add("Saknas");
             }
-            string[] uniqueTolerances = s6_tolerances.Distinct().ToArray();
-            if (uniqueTolerances.Length == 1 && String.Equals(s6_tolerances[0], "Saknas", StringComparison.OrdinalIgnoreCase) == false)
-                s6_value = s6_tolerances[0];
-            else if (uniqueTolerances.Length == 1 && String.Equals(s6_tolerances[0], "Saknas", StringComparison.OrdinalIgnoreCase) == false)
+            string[] uniqueTolerances = s7_tolerances.Distinct().ToArray();
+            if (uniqueTolerances.Length == 1 && String.Equals(s7_tolerances[0], "Saknas", StringComparison.OrdinalIgnoreCase) == false)
+                s7_value = s7_tolerances[0];
+            else if (uniqueTolerances.Length == 1 && String.Equals(s7_tolerances[0], "Saknas", StringComparison.OrdinalIgnoreCase) == false)
             {
-                s6_value = s6_tolerances[0];
-                s6_status = AutoCheckStatus.FAIL;
+                s7_value = s7_tolerances[0];
+                s7_status = AutoCheckStatus.FAIL;
             }
             else
             {
                 foreach (string tolerance in uniqueTolerances)
-                    s6_value += (s6_value.Length == 0 ? string.Empty : ", ") + tolerance;
-                s6_status = AutoCheckStatus.FAIL;
+                    s7_value += (s7_value.Length == 0 ? string.Empty : ", ") + tolerance;
+                s7_status = AutoCheckStatus.FAIL;
             }
-            checklistItems.Add(new ChecklistItem("S6. Toleranstabell har valts korrekt", "Kontrollera att korrekt toleranstabell har använts, baserat på maskintyp (Elekta/Varian), strålkvalité (elektroner/fotoner), nätmask (H&N fix), annan fixation som sitter fast i britsen (fast fix) eller icke fast fixation (utan fix).", s6_value, s6_status));
+            checklistItems.Add(new ChecklistItem("S7. Toleranstabell har valts korrekt", "Kontrollera att korrekt toleranstabell har använts, baserat på maskintyp (Elekta/Varian), strålkvalité (elektroner/fotoner), nätmask (H&N fix), annan fixation som sitter fast i britsen (fast fix) eller icke fast fixation (utan fix).", s7_value, s7_status));
 
             if (treatmentUnitManufacturer == TreatmentUnitManufacturer.Varian)
             {
-                string s7_value = string.Empty;
-                string s7_value_detailed = string.Empty;
-                AutoCheckStatus s7_status = AutoCheckStatus.MANUAL;
-                List<string> s7_imageModalityBeam = new List<string>();
-                List<int> s7_imageModalityBeamNr = new List<int>();
-                List<string> s7_beamId = new List<string>();
+                string s8_value = string.Empty;
+                string s8_value_detailed = string.Empty;
+                AutoCheckStatus s8_status = AutoCheckStatus.MANUAL;
+                List<string> s8_imageModalityBeam = new List<string>();
+                List<int> s8_imageModalityBeamNr = new List<int>();
+                List<string> s8_beamId = new List<string>();
                 foreach (Beam beam in planSetup.Beams)
                 {
                     if (beam.IsSetupField && !Operators.LikeString(beam.Id.ToLower(), "Uppl*gg".ToLower(), CompareMethod.Text))
                     {
                         List<string> protocolIds = new List<string>();
 
-                        s7_value_detailed += (s7_value_detailed.Length == 0 ? string.Empty : "\r\n\r\n") + beam.Id + ": ";
-                        s7_value = string.Empty;
+                        s8_value_detailed += (s8_value_detailed.Length == 0 ? string.Empty : "\r\n\r\n") + beam.Id + ": ";
+                        s8_value = string.Empty;
                         DataTable dataTableImageSessions = AriaInterface.Query("select Session.SessionNum,SessionProcedure.SessionProcedureTemplateId from SessionProcedurePart,SessionProcedure,Session,Radiation where SessionProcedurePart.RadiationSer=Radiation.RadiationSer and SessionProcedure.SessionProcedureSer=SessionProcedurePart.SessionProcedureSer and Session.SessionSer=SessionProcedure.SessionSer and Radiation.PlanSetupSer=" + planSetupSer.ToString() + " and Radiation.RadiationId='" + beam.Id + "' order by SessionNum");
                         foreach (DataRow dataRow in dataTableImageSessions.Rows)
                         {
                             int sessionNr = (int)dataRow[0];
                             string procedureTemplateId = (dataRow[1] == DBNull.Value ? "-" : (string)dataRow[1]);
-                            s7_value_detailed += "\r\n  Session " + sessionNr.ToString() + ": " + procedureTemplateId;
+                            s8_value_detailed += "\r\n  Session " + sessionNr.ToString() + ": " + procedureTemplateId;
                             protocolIds.Add(procedureTemplateId);
                         }
 
-                        s7_beamId.Add(beam.Id);
+                        s8_beamId.Add(beam.Id);
                         string[] uniqueprotocolIds = protocolIds.Distinct().ToArray();
                         if (uniqueprotocolIds.Length == 0)
                         {
-                            s7_imageModalityBeam.Add("Ingen");
-                            s7_status = AutoCheckStatus.FAIL;
+                            s8_imageModalityBeam.Add("Ingen");
+                            s8_status = AutoCheckStatus.FAIL;
                         }
                         else if (uniqueprotocolIds.Length == 1)
                         {
-                            s7_imageModalityBeam.Add(uniqueprotocolIds[0]);
+                            s8_imageModalityBeam.Add(uniqueprotocolIds[0]);
                         }
                         else
                         {
-                            s7_imageModalityBeam.Add("Flera");
-                            s7_status = AutoCheckStatus.FAIL;
+                            s8_imageModalityBeam.Add("Flera");
+                            s8_status = AutoCheckStatus.FAIL;
                         }
                         if (fractionation != null && fractionation.NumberOfFractions != protocolIds.Count)
-                            s7_status = AutoCheckStatus.FAIL;
-                        s7_imageModalityBeamNr.Add(protocolIds.Count);
+                            s8_status = AutoCheckStatus.FAIL;
+                        s8_imageModalityBeamNr.Add(protocolIds.Count);
                     }
                 }
-                for (int beamNr = 0; beamNr < s7_imageModalityBeam.Count; beamNr++)
-                    s7_value += (s7_value.Length == 0 ? string.Empty : ", ") + s7_beamId[beamNr] + ": " + s7_imageModalityBeam[beamNr] + " (" + s7_imageModalityBeamNr[beamNr].ToString() + " fr)";
-                checklistItems.Add(new ChecklistItem("S7. Bildtagningsmodalitet är korrekt", "Kontrollera att bildtagning är korrekt\r\nVarian:\r\n  • Korrekt bildtagningsmodalitet är inlagd, samt att bildtagning är aktiverad för alla sessioner på setup-fälten\r\n  • Se bilaga 4 i dokumentet ”Verifikationsbilder”\r\nElekta:\r\n  • Inga setup-fält på tangentiella bröstbehandlingar\r\n  • Inga setup-fält på L09, L07 och L05 (XVI används i första hand för icke-laterala behandlingar)\r\n  • På L03 tas bilder med behandlingsfält om de finns i 0/180° och 90/270°, annars ska det finnas setup-fält", s7_value, s7_value_detailed, s7_status));
+                for (int beamNr = 0; beamNr < s8_imageModalityBeam.Count; beamNr++)
+                    s8_value += (s8_value.Length == 0 ? string.Empty : ", ") + s8_beamId[beamNr] + ": " + s8_imageModalityBeam[beamNr] + " (" + s8_imageModalityBeamNr[beamNr].ToString() + " fr)";
+                checklistItems.Add(new ChecklistItem("S8. Bildtagningsmodalitet är korrekt", "Kontrollera att bildtagning är korrekt\r\nVarian:\r\n  • Korrekt bildtagningsmodalitet är inlagd, samt att bildtagning är aktiverad för alla sessioner på setup-fälten\r\n  • Se bilaga 4 i dokumentet ”Verifikationsbilder”\r\nElekta:\r\n  • Inga setup-fält på tangentiella bröstbehandlingar\r\n  • Inga setup-fält på L09, L07 och L05 (XVI används i första hand för icke-laterala behandlingar)\r\n  • På L03 tas bilder med behandlingsfält om de finns i 0/180° och 90/270°, annars ska det finnas setup-fält", s8_value, s8_value_detailed, s8_status));
             }
 
-            string s8_value = "Saknas";
-            AutoCheckStatus s8_status = AutoCheckStatus.FAIL;
+            string s9_value = "Saknas";
+            AutoCheckStatus s9_status = AutoCheckStatus.FAIL;
             foreach (Beam beam in planSetup.Beams)
             {
                 if (beam.IsSetupField && Operators.LikeString(beam.Id.ToLower(), "Uppl*gg".ToLower(), CompareMethod.Text))
                 {
-                    s8_status = AutoCheckStatus.PASS;
-                    s8_value = "Existerar";
+                    s9_status = AutoCheckStatus.PASS;
+                    s9_value = "Existerar";
                     break;
                 }
             }
-            checklistItems.Add(new ChecklistItem("S8. Uppläggsfält existerar i planen", "Kontrollera att det finns ett fält med Id Upplägg i behandlingsplanen", s8_value, s8_status));
+            checklistItems.Add(new ChecklistItem("S9. Uppläggsfält existerar i planen", "Kontrollera att det finns ett fält med Id Upplägg i behandlingsplanen", s9_value, s9_status));
 
-            checklistItems.Add(new ChecklistItem("S9. Uppläggningen är rimlig", "Kontrollera att uppläggningen är rimlig för den givna geometrin \r\n  • Exempelvis att behandlingar av extremt kaudala target inte är orienterade 'Head First'", "", AutoCheckStatus.MANUAL));
+            checklistItems.Add(new ChecklistItem("S10. Uppläggningen är rimlig", "Kontrollera att uppläggningen är rimlig för den givna geometrin \r\n  • Exempelvis att behandlingar av extremt kaudala target inte är orienterade 'Head First'", "", AutoCheckStatus.MANUAL));
         }
     }
 }

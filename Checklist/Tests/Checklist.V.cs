@@ -45,7 +45,7 @@ namespace Checklist
                     v1_status = AutoCheckStatus.WARNING;
                 checklistItems.Add(new ChecklistItem("V1. Kollimatorvinkeln är lämplig", "Kontrollera att kollimatorvinkeln är lämplig\r\n  • Varian: vanligtvis 5° resp. 355°, men passar detta ej PTV är andra vinklar ok (dock ej vinklar mellan 355° och 5°)\r\n  • Elekta: 30° resp. 330°", v1_value, v1_status));
                                 
-                if (checklistType == ChecklistType.EclipseVMAT)
+                if (checklistType == ChecklistType.EclipseVMAT && treatmentUnitManufacturer == TreatmentUnitManufacturer.Varian)
                 {
                     string v2_value = string.Empty;
                     AutoCheckStatus v2_status = AutoCheckStatus.WARNING;
@@ -92,9 +92,14 @@ namespace Checklist
                             }
                         }
                     }
-                    checklistItems.Add(new ChecklistItem("V3. Optimeringsbolus är korrekt använt", "Kontrollera att optimeringsbolus har använts korrekt för ytliga target:	\r\n  Eclipse H&N (VMAT):\r\n    • Optimerings-PTV har använts vid optimeringen i de fall då PTV har beskurits med hänsyn till ytterkonturen\r\n    • Skillnaderna i maxdos för uncertainty-planerna (±0,4 cm i x, y, resp. z) är <5% relativt originalplanen. Planerna skapas av dosplaneraren.\r\n    • HELP_BODY inkluderar både patientens ytterkontur (BODY) och optimeringsbolus\r\n  Eclipse Ani, Recti (VMAT):\r\n    • BODY ska inkludera eventuellt optimeringsbolus\r\n  Optimeringsbolus i Eclipse (VMAT):\r\n    • HU för optimeringsbolus är satt till 0 HU\r\n    • Optimeringsbolus är skapat genom 5 mm (H&N) eller 6 mm (Ani, Recti) expansion från det PTV-struktur optimeringen skett på. Boluset ska ej gå innanför patientens hudyta.", string.Empty, v3_details, AutoCheckStatus.MANUAL));
+                    checklistItems.Add(new ChecklistItem("V3. Optimeringsbolus är korrekt använt", "Kontrollera att optimeringsbolus har använts korrekt för ytliga target:	\r\n  Eclipse H&N (VMAT):\r\n    • Optimerings-PTV har använts vid optimeringen i de fall då PTV har beskurits med hänsyn till ytterkonturen\r\n    • HELP_BODY inkluderar både patientens ytterkontur (BODY) och optimeringsbolus\r\n  Eclipse Ani, Recti (VMAT):\r\n    • BODY ska inkludera eventuellt optimeringsbolus\r\n  Optimeringsbolus i Eclipse (VMAT):\r\n    • HU för optimeringsbolus är satt till 0 HU\r\n    • Optimeringsbolus är skapat genom 5 mm (H&N) eller 6 mm (Ani, Recti) expansion från det PTV-struktur optimeringen skett på. Boluset ska ej gå innanför patientens hudyta.", string.Empty, v3_details, AutoCheckStatus.MANUAL));
 
-                    checklistItems.Add(new ChecklistItem("V4. Leveransmönstret är rimligt", "Kontrollera att leveransmönstret är rimligt (att det inte är en stor andel extremt små öppningar och att riskorgan skärmas, samt att alla segment går på ett target)", string.Empty, AutoCheckStatus.MANUAL));
+                    checklistItems.Add(new ChecklistItem("V4. Robusthet", "Kontrollera planens robusthet m.a.p. ISO-center-förskjutning m.h.a. Uncertainty-planer. Planerna skapas av dosplaneraren.\r\n    • Skillnaderna i maxdos för uncertainty-planerna (±0,4 cm i x, y, resp. z) är <5% relativt originalplanen.\r\n    • CTV täckning är acceptabel.", string.Empty, AutoCheckStatus.MANUAL));
+
+                    checklistItems.Add(new ChecklistItem("V5. Leveransmönstret är rimligt", "Kontrollera att leveransmönstret är rimligt (att det inte är en stor andel extremt små öppningar och att riskorgan skärmas, samt att alla segment går på ett target)", string.Empty, AutoCheckStatus.MANUAL));
+
+                    // Kontrollera britsstruktur för Delta4-plan
+                    
                 }
             }
         }

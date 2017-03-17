@@ -21,7 +21,8 @@ namespace Checklist
                 if (string.Compare(image.Series.ImagingDeviceId, "CT_A") == 0 ||
                    string.Compare(image.Series.ImagingDeviceId, "CT_B") == 0 ||
                    string.Compare(image.Series.ImagingDeviceId, "CT_C") == 0 ||
-                   string.Compare(image.Series.ImagingDeviceId, "PET/CT 01") == 0)
+                   string.Compare(image.Series.ImagingDeviceId, "PET/CT 01") == 0 ||
+                    string.Compare(image.Series.ImagingDeviceId, "PET/CT 02") == 0)
                 {
                     if (image.Comment.IndexOf("RT") == 0)
                         i1_status = AutoCheckStatus.PASS;
