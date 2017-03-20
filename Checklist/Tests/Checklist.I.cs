@@ -28,10 +28,26 @@ namespace Checklist
                         i1_status = AutoCheckStatus.PASS;
                     else
                         i1_status = AutoCheckStatus.FAIL;
+                    i1_value = image.Series.ImagingDeviceId + ", " + image.Comment;
                 }
+                // Specific checks for synthetic CTs
+                else if (string.Compare(image.Series.ImagingDeviceId, "sCT_MR_A") == 0)
+                {
+                    // set synthetic CT
+                    syntheticCT = true;
+                    i1_status = AutoCheckStatus.MANUAL;
+                    string MRparameterCheckFile = patient.LastName + "_" + image.Series.Study.CreationDateTime.Value.ToString("yyyyMMdd") + "_" + image.Series.Study.CreationDateTime.Value.ToString("HHmmss") + "_" + image.Series.Study.Id + ".txt";
+                    string MRparameterCheckResult = ValidateMR(MRparameterCheckFile);
+                    if (!String.Equals("MRI SYNTHETIC CT PARAMETERS OK", MRparameterCheckResult))
+                        i1_status = AutoCheckStatus.FAIL;
+                    i1_value = image.Series.ImagingDeviceId + ", " + MRparameterCheckResult;
+                }
+
                 else
+                { 
                     i1_status = AutoCheckStatus.FAIL;
-                i1_value = image.Series.ImagingDeviceId + ", " + image.Comment;
+                    i1_value = image.Series.ImagingDeviceId + ", " + image.Comment;
+                }
             }
             else
             {

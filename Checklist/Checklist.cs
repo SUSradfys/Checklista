@@ -24,6 +24,7 @@ namespace Checklist
         private TreatmentSide treatmentSide;
         private int numberOfBeams;
         private int numberOfTreatmentBeams;
+        private bool syntheticCT = false;
         
         private long patientSer = -1;
         private long courseSer = -1;
@@ -157,6 +158,7 @@ namespace Checklist
         {
             System.Windows.Forms.MessageBox.Show(exception.Message, title, System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
         }
+
 
     }
 }

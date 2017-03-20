@@ -107,41 +107,83 @@ namespace Checklist
                 d5_value = "Model: " + couchModel + ", Interior: " + couchInteriorHU.ToString() + " HU, Surface: " + couchSurfaceHU.ToString() + " HU (" + treatmentUnitManufacturer + ")";
             checklistItems.Add(new ChecklistItem("D5. Britsprofil och HU har valts korrekt", "Kontrollera att korrekt britsprofil och korrekta HU valts under Structure Properties för britsstrukturerna och fliken General samt CT Value and Material.\r\n• Varian: Exact IGRT Couch, medium (CouchSurface: -300, CouchInterior: -950)\r\n• Elekta: BrainLAB/iBeam Couch (CouchSurface: -300, CouchInterior: -950)\r\n• Notera att brits inte ska inkluderas för icke coplanara VMAT behandlingar av intra- och extra-kraniella target kraniellt om C1.", d5_value, d5_status));
 
-            string d6_value = string.Empty;
-            string d6_value_detailed = string.Empty;
-            AutoCheckStatus d6_status = AutoCheckStatus.UNKNOWN;
+            // if synthetic CT, compute the distance between body and couch surface
+            if (syntheticCT)
+            { 
+                string d6_value = string.Empty;
+                AutoCheckStatus d6_status = AutoCheckStatus.UNKNOWN;
+                double distance = 15.0;
+                double threshold = 5.0;
+
+                Structure body = structureSet.Structures.Where(s => String.CompareOrdinal(s.Id, "BODY") == 0).ToList().FirstOrDefault();
+                Structure couchSurface = structureSet.Structures.Where(s => String.CompareOrdinal(s.DicomType, "SUPPORT") == 0).Where(s => s.Id.IndexOf("Surface") != -1).ToList().FirstOrDefault();
+            
+                if (body == null)
+                {
+                    d6_status = AutoCheckStatus.FAIL;
+                    d6_value = "Body struktur saknas. ";
+                }
+                if (couchSurface == null)
+                {
+                    d6_status = AutoCheckStatus.FAIL;
+                    d6_value += "Britsstruktur saknas. ";
+                }
+                if (d6_status != AutoCheckStatus.FAIL)
+                {
+                    // compute separation between structures and distance to threshold
+                    double separation = 0;
+                    if (image.ImagingOrientation.ToString().IndexOf("Prone") > 0)
+                    {
+                        separation = body.MeshGeometry.Bounds.Location.Y - (couchSurface.MeshGeometry.Bounds.Location.Y + couchSurface.MeshGeometry.Bounds.Size.Y);
+                    }
+                    else
+                    {
+                        separation = -1 * (body.MeshGeometry.Bounds.Location.Y + body.MeshGeometry.Bounds.Size.Y - couchSurface.MeshGeometry.Bounds.Location.Y);
+                    } 
+                    if (Math.Round(distance - separation, 0) > threshold)
+                        d6_status = AutoCheckStatus.WARNING;
+                    else
+                        d6_status = AutoCheckStatus.PASS;
+                    d6_value = "Avstånd mellan Body och brits: " + separation.ToString("N0") + " mm";
+                }
+            checklistItems.Add(new ChecklistItem("D6. Kontrollera avstånd mellan Body och britsstruktur", "Kontrollera att avståndet mellan Body och britsstuktur är [10, 20] mm för syntetisk CT", d6_value, d6_status));
+            }
+
+            string d7_value = string.Empty;
+            string d7_value_detailed = string.Empty;
+            AutoCheckStatus d7_status = AutoCheckStatus.UNKNOWN;
             bool calculationErrorOrWarning = false;
             foreach (Beam beam in planSetup.Beams)
             {
                 if (!beam.IsSetupField)
                 {
-                    d6_value_detailed += beam.Id + ":\r\n";
+                    d7_value_detailed += beam.Id + ":\r\n";
                     foreach (BeamCalculationLog beamCalculationLog in beam.CalculationLogs)
                     {
                         foreach (string messageLine in beamCalculationLog.MessageLines)
                         {
                             if (messageLine.IndexOf("Warning") == 0 || messageLine.IndexOf("Error") == 0)
                             {
-                                d6_value_detailed += "• " + messageLine + "\r\n";
+                                d7_value_detailed += "• " + messageLine + "\r\n";
                                 calculationErrorOrWarning = true;
                             }
                         }
                     }
-                    d6_value_detailed += "\r\n";
+                    d7_value_detailed += "\r\n";
                 }
             }
             if (calculationErrorOrWarning == false)
             {
-                d6_status = AutoCheckStatus.PASS;
-                d6_value = "Inga error eller varningar";
+                d7_status = AutoCheckStatus.PASS;
+                d7_value = "Inga error eller varningar";
             }
             else
             {
-                d6_status = AutoCheckStatus.WARNING;
-                d6_value = "Error eller varningar";
+                d7_status = AutoCheckStatus.WARNING;
+                d7_value = "Error eller varningar";
             }
-            d6_value_detailed = "Fält:\r\n" + reorderBeamParam(d6_value_detailed, "\r\n\r\n");
-            checklistItems.Add(new ChecklistItem("D6. Eventuella felmeddelanden under Errors And Warnings är acceptabla", "Kontrollera att eventuella meddelanden under Errors And Warnings är acceptabla och bekräfta detta med signatur i protokollet.", d6_value, d6_value_detailed, d6_status));
+            d7_value_detailed = "Fält:\r\n" + reorderBeamParam(d7_value_detailed, "\r\n\r\n");
+            checklistItems.Add(new ChecklistItem("D7. Eventuella felmeddelanden under Errors And Warnings är acceptabla", "Kontrollera att eventuella meddelanden under Errors And Warnings är acceptabla och bekräfta detta med signatur i protokollet.", d7_value, d7_value_detailed, d7_status));
         }
     }
 }

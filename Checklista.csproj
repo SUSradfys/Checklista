@@ -49,6 +49,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="PresentationCore" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -71,6 +72,7 @@
     <Compile Include="Checklist\Checklist.GetIsSplitVMAT.cs" />
     <Compile Include="Checklist\Checklist.ElektaMLCcheck.cs" />
     <Compile Include="Checklist\Checklist.GetVMATCoplanar.cs" />
+    <Compile Include="Checklist\Checklist.ValidateMRparameters.cs" />
     <Compile Include="Checklist\Checklist.VarianMLCCheck.cs" />
     <Compile Include="Checklist\Checklista.CheckPrescription.cs" />
     <Compile Include="Checklist\Checklista.GetSlimList.cs" />
