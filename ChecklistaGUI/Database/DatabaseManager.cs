@@ -28,7 +28,8 @@ namespace Checklist
             userId = string.Empty;
             try
             {
-                using (SqlConnection sqlConnection = new SqlConnection(@"Server=" + server + "; database=" + database + "; User ID='" + this.userId + "'; Pwd='" + password + "'"))
+                using (SqlConnection sqlConnection = new SqlConnection(@"Server=tcp:" + server + ", 1433; database=" + database + "; User ID='" + this.userId + "'; Pwd='" + password + "'" + "; Connection Timeout=300"))
+                //using (SqlConnection sqlConnection = new SqlConnection(@"Server=" + server.Replace("\\\\", "\\") + "; database=" + database + "; User ID='" + this.userId + "'; Pwd='" + password + "'; Connection Timeout=300"))
                 {
                     sqlConnection.Open();
 
@@ -57,7 +58,8 @@ namespace Checklist
 
             try
             {
-                using (SqlConnection sqlConnection = new SqlConnection(@"Server=" + server + "; database=" + database + "; User ID='" + this.userId + "'; Pwd='" + password + "'"))
+                using (SqlConnection sqlConnection = new SqlConnection(@"Server=tcp:" + server + ", 1433; database=" + database + "; User ID='" + this.userId + "'; Pwd='" + password + "'" + "; Connection Timeout=300"))
+                //using (SqlConnection sqlConnection = new SqlConnection(@"Server=" + server + "; database=" + database + "; User ID='" + this.userId + "'; Pwd='" + password + "'"))
                 {
                     sqlConnection.Open();
 
@@ -81,7 +83,8 @@ namespace Checklist
 
             try
             {
-                using (SqlConnection sqlConnection = new SqlConnection(@"Server=" + server + "; database=" + database + "; User ID='" + this.userId + "'; Pwd='" + password + "'"))
+                using (SqlConnection sqlConnection = new SqlConnection(@"Server=tcp:" + server + ", 1433; database=" + database + "; User ID='" + this.userId + "'; Pwd='" + password + "'" + "; Connection Timeout=300"))
+                //using (SqlConnection sqlConnection = new SqlConnection(@"Server=" + server + "; database=" + database + "; User ID='" + this.userId + "'; Pwd='" + password + "'"))
                 {
                     sqlConnection.Open();
                     using (SqlTransaction transaction = sqlConnection.BeginTransaction())

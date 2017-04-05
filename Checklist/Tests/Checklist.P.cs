@@ -360,6 +360,8 @@ namespace Checklist
                         p10_status = AutoCheckStatus.PASS;
                     if (p10_value.IndexOf("ej levererbara") > 0)
                         p10_status = AutoCheckStatus.FAIL;
+                    else if (p10_value.IndexOf("ej optimala") > 0)
+                        p10_status = AutoCheckStatus.WARNING;
                     if (p10_status == AutoCheckStatus.WARNING)
                     {
                         var p10_values = p10_value.Split('.').ToList();
