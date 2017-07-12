@@ -90,13 +90,15 @@ namespace Checklist
                 double couchVrt = (double)CouchPos.Rows[0]["CouchVrt"];
                 deltaCouch[2] = beam.IsocenterPosition.y / 10.0 - couchVrt;
                 checklistItems.Add(new ChecklistItem("X6. Fyll i värden för Delta Couch.", "Fyll i beräknade Delta Couch-värden för planens alla fält.", String.Format("Vrt: {0:N2} cm, Lng: {1:N2} cm, Lat: {2:N2} cm", deltaCouch[2], deltaCouch[1], deltaCouch[0]), String.Format("Delta Couch shift (cm):\r\nVrt:\t{0:N2}\r\nLng:\t{1:N2}\r\nLat:\t{2:N2}", deltaCouch[2], deltaCouch[1], deltaCouch[0]), AutoCheckStatus.MANUAL));
-                //checklistItems.Add(new ChecklistItem("X6. Importera underlag till Catalyst.", "Importera plan och strukturset till Catalyst i enlighet med gällande metodbeskrivning.", "", AutoCheckStatus.MANUAL));
+                
+                
+                checklistItems.Add(new ChecklistItem("X7. Importera underlag till Catalyst.", "Importera plan och strukturset till Catalyst i enlighet med gällande metodbeskrivning.", String.Empty, AutoCheckStatus.MANUAL));
 
             }
 
-            checklistItems.Add(new ChecklistItem("X7. Treatment Approved", "Gör planen Treatment Approved. Planen får endast göras Treatment Approved efter att ovanstående kontroller är utförda och Oberoende MU-kontroll eller QC-mätning är godkänd.", string.Empty, AutoCheckStatus.MANUAL));
+            checklistItems.Add(new ChecklistItem("X8. Treatment Approved", "Gör planen Treatment Approved. Planen får endast göras Treatment Approved efter att ovanstående kontroller är utförda och Oberoende MU-kontroll eller QC-mätning är godkänd.", string.Empty, AutoCheckStatus.MANUAL));
 
-            checklistItems.Add(new ChecklistItem("X8. Task sätts till Done", "Tryck Done när alla kontroller är klara\r\n  • Ändra Qty till det antal planer som har kontrollerats\r\n  • Om planen har kontrollmätts tycker man Done först när planen både är kontrollerad och kontrollmätt", string.Empty, AutoCheckStatus.MANUAL));
+            checklistItems.Add(new ChecklistItem("X9. Task sätts till Done", "Tryck Done när alla kontroller är klara\r\n  • Ändra Qty till det antal planer som har kontrollerats\r\n  • Om planen har kontrollmätts tycker man Done först när planen både är kontrollerad och kontrollmätt", string.Empty, AutoCheckStatus.MANUAL));
 
             //checklistItems.Add(new ChecklistItem("X5. Signera i rutan Fysiker kontroll", "Genomgången checklista med accepterat resultat bekräftas med signatur i behandlingskortet i rutan Fysiker kontroll.", string.Empty, AutoCheckStatus.MANUAL));
         }

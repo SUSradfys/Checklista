@@ -9,14 +9,17 @@ namespace Checklist
 {
     public partial class Checklist
     {
-        public bool CheckPrescription(string planSetupSer)
+        public long CheckPrescription(string planSetupSer)
         {
-            bool valid = true;
+            // Rather than checking if a prescription exists this method now returns the prescritption serial.
+            long prescSer;
             DataTable prescription = AriaInterface.Query("select PrescriptionSer from PlanSetup where PlanSetupSer=" + planSetupSer.ToString() + " and PrescriptionSer is not null");
-            if (prescription.Rows.Count == 0)
-                valid = false;
+            if (prescription.Rows.Count > 0)
+                prescSer = (long)prescription.Rows[0]["PrescriptionSer"];
+            else
+                prescSer = -1;
 
-            return valid;
+            return prescSer;
         }
     }
 }

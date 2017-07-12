@@ -14,6 +14,7 @@ namespace Checklist
 {
     public partial class Checklist
     {
+        // Change this to DNS at some point.
         private static string IP = "147.220.96.181";
         private static string remotePath = @"\\147.220.96.181\Analysed\";
         private static string user = "EclipseUser";
@@ -22,14 +23,13 @@ namespace Checklist
         private string ValidateMR(string fileName)
         {
             string[] content = new List<string>().ToArray();
-
             // Read file from network share
             using (NetworkShareAccesser.Access(IP, user, pass))
             {
                 if (File.Exists(remotePath + fileName))
                     content = File.ReadAllLines(remotePath + fileName);
                 else
-                    return "MR inte validerad.";
+                    return "MRI sCT inte validerad.";
             }
 
             // Get last non-empty line

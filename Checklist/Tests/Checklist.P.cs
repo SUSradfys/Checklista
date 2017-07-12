@@ -123,10 +123,18 @@ namespace Checklist
                             }
                             else if (checklistType == ChecklistType.EclipseVMAT)
                             {
+                                // For VMAT use treatmentTime=2 if MU<=400, otherwise treatmentTime = min(5.0, max(3.0, ceil(MU/(DoseRate/N)))), where N=2
+                                int doseRateFactor = 2;
+                                if (openMU <= 400 && treatmentTime == 2)
+                                    p3_numberOfPass++;
+                                if (openMU > 400 && treatmentTime == Math.Min(5.0, Math.Max(3.0, Math.Ceiling(openMU / ((double)beam.DoseRate / doseRateFactor)))))
+                                    p3_numberOfPass++;
+                                /*
                                 if (openMU <= 400 && treatmentTime == 2)
                                     p3_numberOfPass++;
                                 else if (openMU > 400 && treatmentTime == 3)
                                     p3_numberOfPass++;
+                                */
                             }
                             else if (checklistType == ChecklistType.EclipseGating)
                             {
@@ -149,19 +157,41 @@ namespace Checklist
                     p3_status = AutoCheckStatus.PASS;
                 p3_value = reorderBeamParam(p3_value, ",");
 
-                checklistItems.Add(new ChecklistItem("P3. Beam on-tiderna är korrekta", "Kontrollera att fälten är tilldelade korrekta beam on-tider:\r\n  • 0.5 min för FFF fält med <600 MU\r\n  • 1 min för öppna fält med <=500 MU och kilfält med <=300 MU\r\n  • 2 min för öppna fält med >500 MU, kilfält med >300 MU, och RapidArc (<=400 MU/arc)\r\n  • 3 min för RA (>400 MU/arc)\r\n  • 5 min för gating", p3_value, p3_status));
+                checklistItems.Add(new ChecklistItem("P3. Beam on-tiderna är korrekta", "Kontrollera att fälten är tilldelade korrekta beam on-tider:\r\n  • 0.5 min för FFF fält med <600 MU\r\n  • 1 min för öppna fält med <=500 MU och kilfält med <=300 MU\r\n  • 2 min för öppna fält med >500 MU och kilfält med >300 MU  \r\n  • 5 min för gating\r\n  • För RA gäller* \r\n\t MU \t\tBeam on (min)\r\n\t <= 400\t\t2\r\n\t 400<x<=900\t3\r\n\t 900<x<=1200\t4\r\n\t >1200\t\t5\r\n*Om dosraten är 600 MU/min.", p3_value, p3_status));
             }
 
             // Will now use information from Prescription rather than verifying against ChecklistType
             string p4_value = string.Empty;
             AutoCheckStatus p4_status = AutoCheckStatus.FAIL;
             string prescribedGating = string.Empty;
-            DataTable prescription = AriaInterface.Query("select Gating from Prescription, PlanSetup where PlanSetup.PrescriptionSer = Prescription.PrescriptionSer and PlanSetup.PlanSetupSer = '" + planSetupSer.ToString() + "'");
-            if (prescription.Rows[0]["Gating"] != DBNull.Value)
-                prescribedGating = (string)prescription.Rows[0]["Gating"];
+            
 
             DataTable dataTableUseGated = AriaInterface.Query("select distinct ExternalFieldCommon.MotionCompTechnique from Radiation,ExternalFieldCommon where Radiation.RadiationSer=ExternalFieldCommon.RadiationSer and Radiation.PlanSetupSer=" + planSetupSer.ToString());
+            bool gatingChecked;
             if (dataTableUseGated.Rows.Count == 1 && dataTableUseGated.Rows[0][0] != DBNull.Value && string.Compare((string)dataTableUseGated.Rows[0][0], "GATING") == 0)
+            { 
+                gatingChecked = true;
+                p4_value = "Ikryssad";
+            }
+            else
+            { 
+                gatingChecked = false;
+                p4_value = "Ej ikryssad";
+            }
+
+            if (prescSer > 0)
+            {
+                DataTable prescription = AriaInterface.Query("select Gating from Prescription, PlanSetup where PlanSetup.PrescriptionSer = Prescription.PrescriptionSer and PlanSetup.PlanSetupSer = '" + planSetupSer.ToString() + "'");
+                if (prescription.Rows[0]["Gating"] != DBNull.Value)
+                    prescribedGating = (string)prescription.Rows[0]["Gating"];
+                p4_status = CheckResult(String.IsNullOrEmpty(prescribedGating) != gatingChecked);
+            }
+            else
+            {
+                p4_status = AutoCheckStatus.WARNING;
+                p4_value = "Ordination saknas - kontroll kan ej genomföras; " + p4_value;
+            }
+            /*
             {
                 if (String.IsNullOrEmpty(prescribedGating) == false)
                     p4_status = AutoCheckStatus.PASS;
@@ -177,6 +207,7 @@ namespace Checklist
                     p4_status = AutoCheckStatus.PASS;
                 p4_value = "Ej ikryssad";
             }
+            */
             /*
             if (dataTableUseGated.Rows.Count == 1 && dataTableUseGated.Rows[0][0] != DBNull.Value && string.Compare((string)dataTableUseGated.Rows[0][0], "GATING") == 0)
             {

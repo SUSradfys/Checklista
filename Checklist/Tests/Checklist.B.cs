@@ -38,16 +38,23 @@ namespace Checklist
             AutoCheckStatus b2_status = AutoCheckStatus.MANUAL;
             string b2_value = string.Empty;
             // Check against prescription
-            DataTable bolus = AriaInterface.Query("select PlanSetupSer, PlanSetup.PrescriptionSer, Prescription.PrescriptionSer, BolusFrequency, BolusThickness from PlanSetup, Prescription where PlanSetup.PrescriptionSer = Prescription.PrescriptionSer and PlanSetup.PlanSetupSer = " + planSetupSer.ToString());
-            if (bolus.Rows.Count > 0)
+            if (prescSer > 0)
             {
-                b2_value += (bolus.Rows[0][3] == DBNull.Value ? string.Empty : (string)bolus.Rows[0][3]);
-                b2_value += (b2_value.Length == 0 ? string.Empty : ", ") + (bolus.Rows[0][4] == DBNull.Value ? string.Empty : (string)bolus.Rows[0][4]);
+                DataTable bolus = AriaInterface.Query("select PlanSetupSer, PlanSetup.PrescriptionSer, Prescription.PrescriptionSer, BolusFrequency, BolusThickness from PlanSetup, Prescription where PlanSetup.PrescriptionSer = Prescription.PrescriptionSer and PlanSetup.PlanSetupSer = " + planSetupSer.ToString());
+                if (bolus.Rows.Count > 0)
+                {
+                    b2_value += (bolus.Rows[0][3] == DBNull.Value ? string.Empty : (string)bolus.Rows[0][3]);
+                    b2_value += (b2_value.Length == 0 ? string.Empty : ", ") + (bolus.Rows[0][4] == DBNull.Value ? string.Empty : (string)bolus.Rows[0][4]);
+                }
+
+                if (String.IsNullOrWhiteSpace(b2_value))
+                    b2_value = "Information saknas";
             }
-
-            if (String.IsNullOrWhiteSpace(b2_value))
-                b2_value = "Information saknas";
-
+            else
+            {
+                b2_status = AutoCheckStatus.WARNING;
+                b2_value = "Ordination saknas, kontroll ej möjlig.";
+            }
             checklistItems.Add(new ChecklistItem("B2. Ordinationen innehåller information om bolus", "Kontrollera att bolus finns angivet i ordinationen (aktuell tjocklek och bolustyp).", b2_value, b2_status));
         }
     }

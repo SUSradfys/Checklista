@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Data;
 using VMS.TPS.Common.Model.API;
+using System.Windows.Forms;
 
 namespace Checklist
 {
@@ -29,6 +30,7 @@ namespace Checklist
         private long patientSer = -1;
         private long courseSer = -1;
         private long planSetupSer = -1;
+        private long prescSer = -1;
 
         private List<ChecklistItem> checklistItems = new List<ChecklistItem>();
         private DatabaseManager databaseManager = new DatabaseManager(Settings.RESULT_SERVER, Settings.RESULT_USERNAME, Settings.RESULT_PASSWORD);
@@ -89,9 +91,15 @@ namespace Checklist
             try
             {
                 AriaInterface.Connect();
-                // check that the plan is connected to a prescription
-                if (CheckPrescription(planSetupSer.ToString())== false)
-                    throw new IndexOutOfRangeException("Kritiskt fel: Ordination saknas.");
+                // check that the plan is connected to a prescription and get the PrescriptionSer
+                prescSer = CheckPrescription(planSetupSer.ToString());
+                if (prescSer < 0)
+                {
+                    // Invoke Yes/No message box 
+                    DialogResult dialogResult = MessageBox.Show("Planen i fråga saknar kopplad ordination. Avsaknad av ordination medför att vissa kontroller inte kan utföras. \r\nÄr du säker på att du vill fortsätta?", "Ordination saknas", MessageBoxButtons.YesNo);
+                    if (dialogResult == DialogResult.No)
+                        return; // This will end the instance
+                }
                 U();
                 I();
                 D();
