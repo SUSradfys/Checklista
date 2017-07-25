@@ -84,15 +84,23 @@ namespace Checklist
 
             
             DataTable prescription = AriaInterface.Query("select Gating from Prescription, PlanSetup where PlanSetup.PrescriptionSer = Prescription.PrescriptionSer and PlanSetup.PlanSetupSer = '" + planSetupSer.ToString() + "'");
-            if (prescription.Rows.Count == 1)
+            switch (prescription.Rows.Count)
             {
-                if (prescription.Rows[0]["Gating"] != DBNull.Value)
-                    i3_value += (string)prescription.Rows[0]["Gating"];
-                else
-                    i3_value += "Friandning";
+                case 0:
+                    if (i3_status != AutoCheckStatus.FAIL)
+                        i3_status = AutoCheckStatus.WARNING;
+                    i3_value = "Saknas";
+                    break;
+                case 1:
+                    if (prescription.Rows[0]["Gating"] != DBNull.Value)
+                        i3_value += (string)prescription.Rows[0]["Gating"];
+                    else
+                        i3_value += "Friandning";
+                    break;
+                default:
+                    i3_value += "Obestämbart";
+                    break;
             }
-            else
-                i3_value += "Obestämbart";
 
             /*
             if (image != null)

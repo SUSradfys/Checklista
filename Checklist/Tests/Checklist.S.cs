@@ -25,7 +25,7 @@ namespace Checklist
                 {
                     double iduPosVrt = double.NaN;
                     DataTable dataTableIDUPosVrt = AriaInterface.Query("select IDUPosVrt from Radiation,ExternalFieldCommon where ExternalFieldCommon.RadiationSer=Radiation.RadiationSer and Radiation.PlanSetupSer=" + planSetupSer.ToString() + " and Radiation.RadiationId='" + beam.Id + "'");
-                    if (dataTableIDUPosVrt.Rows.Count == 1 && dataTableIDUPosVrt.Rows[0][0] != DBNull.Value && !Operators.LikeString(beam.Id.ToLower(),"Uppl*gg".ToLower(), CompareMethod.Text))
+                    if (dataTableIDUPosVrt.Rows.Count == 1 && dataTableIDUPosVrt.Rows[0][0] != DBNull.Value && !Operators.LikeString(beam.Id.ToLower(), "Uppl*gg".ToLower(), CompareMethod.Text))
                     {
                         iduPosVrt = (double)dataTableIDUPosVrt.Rows[0][0];
                         if (iduPosVrt == -50)
@@ -43,6 +43,62 @@ namespace Checklist
                     s1_status = AutoCheckStatus.WARNING;
                 s1_value = reorderBeamParam(s1_value, ",");
                 checklistItems.Add(new ChecklistItem("S1. Bildplattans vertikala position är -50 cm om inte särskilda skäl föreligger", "Kontrollera att bildplattans vertikala position är -50 cm om inte särskilda skäl föreligger", s1_value, s1_status));
+            }
+
+            if (treatmentUnitManufacturer == TreatmentUnitManufacturer.Elekta)
+            {
+                string s2_value = string.Empty;
+                string s2_value_detail = String.Empty;
+                AutoCheckStatus s2_status = AutoCheckStatus.PASS;
+                //List<double> s2_gantryAngles = new List<double>();
+                Dictionary<string, double> s2_gantryAngles = new Dictionary<string, double>();
+                foreach (Beam beam in planSetup.Beams)
+                    if (!beam.IsSetupField)
+                    {
+                        s2_gantryAngles.Add(beam.Id, beam.ControlPoints[0].GantryAngle);
+                        s2_value += (s2_value.Length == 0 ? "Sida: " + treatmentSide.ToString() + ", " : ", ") + beam.Id + ": " + beam.ControlPoints[0].GantryAngle.ToString("0.0");
+                    }
+                if (treatmentSide == TreatmentSide.PlusX)
+                {
+                    bool fieldsOnOppositeSide = false;
+                    foreach (KeyValuePair<string, double> entry in s2_gantryAngles)
+                        if (entry.Value > 185 && entry.Value <= 290)
+                            fieldsOnOppositeSide = true;
+                    if (fieldsOnOppositeSide == false)
+                    {
+                        foreach (KeyValuePair<string, double> entry in s2_gantryAngles)
+                            if (entry.Value <= 270 && entry.Value > 180)
+                            {
+                                s2_status = AutoCheckStatus.WARNING;
+                                s2_value_detail += (s2_value_detail.Length == 0 ? String.Empty : "\r\n") + entry.Key + ": " + entry.Value.ToString("0.0");
+                            }
+                    }
+                } 
+                else
+                {
+                    bool fieldsOnOppositeSide = false;
+                    foreach (KeyValuePair<string, double> entry in s2_gantryAngles)
+                        if (entry.Value >= 70 && entry.Value < 175)
+                            fieldsOnOppositeSide = true;
+                    if (fieldsOnOppositeSide == false)
+                    {
+                        foreach (KeyValuePair<string, double> entry in s2_gantryAngles)
+                            if (entry.Value >= 90 && entry.Value <= 180)
+                            { 
+                                s2_status = AutoCheckStatus.WARNING;
+                                s2_value_detail += (s2_value_detail.Length == 0 ? String.Empty : "\r\n") + entry.Key + ": " + entry.Value.ToString("0.0");
+                            }
+                    }
+                }
+                s2_value = reorderBeamParam(s2_value, ",");
+                if (s2_value_detail.Length > 0)
+                {
+                    s2_value_detail = reorderBeamParam(s2_value_detail, "\r\n");
+                    s2_value_detail = "Gantryt kommer att rotera ofördelaktigt för att nå följande fält\r\n" + s2_value_detail;
+                    checklistItems.Add(new ChecklistItem("S2. Fördelaktiga gantryvinklar har valts.", "Kontrollera att fördelaktiga gantryvinklar har valts med avsseende på rotationsriktning för fält nära 180°. Om det finns fält som går över långt på motstående sida (70° resp. 290°) ges inga rekommendationer. I annat fall gäller rekommendationen:\r\n  • Vänstersidiga behandlingar: Fält med 180<gantryvinkel<=270 undanbedes\r\n  • Högersidiga behandlingar: Fält med 90<=gantryvinkel<=180 undanbedes\r\n  • Notera att det omvända förhållandet mellan behandlingssida och fält gäller om patienten är orienterad Feet First (fötterna mot gantryt)", s2_value, s2_value_detail, s2_status));
+                }
+                else
+                    checklistItems.Add(new ChecklistItem("S2. Fördelaktiga gantryvinklar har valts.", "Kontrollera att fördelaktiga gantryvinklar har valts med avsseende på rotationsriktning för fält nära 180°. Om det finns fält som går över långt på motstående sida (70° resp. 290°) ges inga rekommendationer. I annat fall gäller rekommendationen:\r\n  • Vänstersidiga behandlingar: Fält med 180<gantryvinkel<=270 undanbedes\r\n  • Högersidiga behandlingar: Fält med 90<=gantryvinkel<=180 undanbedes\r\n  • Notera att det omvända förhållandet mellan behandlingssida och fält gäller om patienten är orienterad Feet First (fötterna mot gantryt)", s2_value, s2_status));
             }
 
             if (treatmentUnitManufacturer == TreatmentUnitManufacturer.Varian)
@@ -189,19 +245,19 @@ namespace Checklist
                 double allowedDiff = 0.5;  // the allowed difference between isocenters in mm
                 if (double.IsNaN(s4_isocenterPosition.x) && double.IsNaN(s4_isocenterPosition.y) && double.IsNaN(s4_isocenterPosition.z))
                 {
-                     s4_isocenterPosition = beam.IsocenterPosition;
-                     if (double.IsNaN(beam.IsocenterPosition.x) == false && double.IsNaN(beam.IsocenterPosition.y) == false && double.IsNaN(beam.IsocenterPosition.z) == false)
-                         s4_numberOfPass++;
-                     else
-                         s4_isocenterCouldNotBeDetermined = true;
-                 }
-                
-                 //else if (Math.Round(s4_isocenterPosition.x, 1) == Math.Round(beam.IsocenterPosition.x, 1) && Math.Round(s4_isocenterPosition.y, 1) == Math.Round(beam.IsocenterPosition.y, 1) && Math.Round(s4_isocenterPosition.z, 1) == Math.Round(beam.IsocenterPosition.z, 1))
-                 else if (Math.Abs(s4_isocenterPosition.x - beam.IsocenterPosition.x) <= allowedDiff && Math.Abs(s4_isocenterPosition.y - beam.IsocenterPosition.y) <= allowedDiff && Math.Abs(s4_isocenterPosition.z - beam.IsocenterPosition.z) <= allowedDiff)
+                    s4_isocenterPosition = beam.IsocenterPosition;
+                    if (double.IsNaN(beam.IsocenterPosition.x) == false && double.IsNaN(beam.IsocenterPosition.y) == false && double.IsNaN(beam.IsocenterPosition.z) == false)
+                        s4_numberOfPass++;
+                    else
+                        s4_isocenterCouldNotBeDetermined = true;
+                }
+
+                //else if (Math.Round(s4_isocenterPosition.x, 1) == Math.Round(beam.IsocenterPosition.x, 1) && Math.Round(s4_isocenterPosition.y, 1) == Math.Round(beam.IsocenterPosition.y, 1) && Math.Round(s4_isocenterPosition.z, 1) == Math.Round(beam.IsocenterPosition.z, 1))
+                else if (Math.Abs(s4_isocenterPosition.x - beam.IsocenterPosition.x) <= allowedDiff && Math.Abs(s4_isocenterPosition.y - beam.IsocenterPosition.y) <= allowedDiff && Math.Abs(s4_isocenterPosition.z - beam.IsocenterPosition.z) <= allowedDiff)
                     s4_numberOfPass++;
 
             }
-                        
+
             if (s4_numberOfPass == numberOfBeams)//numberOfTreatmentBeams)
             {
                 s4_value = "Samma isocenter";

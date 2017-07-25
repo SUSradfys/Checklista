@@ -18,11 +18,13 @@ namespace Checklist
                 AutoCheckStatus v1_status = AutoCheckStatus.FAIL;
                 int v1_numberOfWarnings = 0;
                 int v1_numberOfPass = 0;
+                List<double> collAngles = new List<double>();
                 foreach (Beam beam in planSetup.Beams)
                 {
                     if (!beam.IsSetupField)
                     {
                         double collimatorAngle = beam.ControlPoints[0].CollimatorAngle;
+                        collAngles.Add(collimatorAngle);
                         if (treatmentUnitManufacturer == TreatmentUnitManufacturer.Varian)
                         { 
                             if (collimatorAngle == 5 || collimatorAngle == 355)
@@ -43,6 +45,9 @@ namespace Checklist
                     v1_status = AutoCheckStatus.PASS;
                 else if (v1_numberOfPass + v1_numberOfWarnings == numberOfTreatmentBeams)
                     v1_status = AutoCheckStatus.WARNING;
+                if (collAngles.Count > 1 && collAngles.Distinct().ToList().Count < 2)
+                    v1_status = AutoCheckStatus.FAIL;
+
                 checklistItems.Add(new ChecklistItem("V1. Kollimatorvinkeln är lämplig", "Kontrollera att kollimatorvinkeln är lämplig\r\n  • Varian: vanligtvis 5° resp. 355°, men passar detta ej PTV är andra vinklar ok (dock ej vinklar mellan 355° och 5°)\r\n  • Elekta: 30° resp. 330°", v1_value, v1_status));
                                 
                 if (checklistType == ChecklistType.EclipseVMAT && treatmentUnitManufacturer == TreatmentUnitManufacturer.Varian)
