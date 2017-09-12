@@ -49,6 +49,10 @@ namespace Checklist
                 {
                     x2_value += ", Mät position manuellt";
                 }
+                else if (string.Compare(image.Series.ImagingDeviceId, "PET/CT 03") == 0)
+                {
+                    x2_value += ", Mät position manuellt";
+                }
                 else if (syntheticCT)
                 {
                     x2_value += ", Mät position manuellt";
