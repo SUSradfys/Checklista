@@ -252,15 +252,18 @@ namespace Checklist
 
             string s5_value;
             AutoCheckStatus s5_status = AutoCheckStatus.FAIL;
+            string s5_value_detailed = string.Empty;
             int s5_numberOfPass = 0;
             bool s5_isocenterCouldNotBeDetermined = false;
             VVector s5_isocenterPosition = new VVector(double.NaN, double.NaN, double.NaN);
+            List<VVector> allIsoPos = new List<VVector>();
             foreach (Beam beam in planSetup.Beams)
             {
-                double allowedDiff = 0.5;  // the allowed difference between isocenters in mm
+                double allowedDiff = 0.0;  // the allowed difference between isocenters in mm
                 if (double.IsNaN(s5_isocenterPosition.x) && double.IsNaN(s5_isocenterPosition.y) && double.IsNaN(s5_isocenterPosition.z))
                 {
                     s5_isocenterPosition = beam.IsocenterPosition;
+                    allIsoPos.Add(s5_isocenterPosition);
                     if (double.IsNaN(beam.IsocenterPosition.x) == false && double.IsNaN(beam.IsocenterPosition.y) == false && double.IsNaN(beam.IsocenterPosition.z) == false)
                         s5_numberOfPass++;
                     else
@@ -269,7 +272,12 @@ namespace Checklist
 
                 //else if (Math.Round(s5_isocenterPosition.x, 1) == Math.Round(beam.IsocenterPosition.x, 1) && Math.Round(s5_isocenterPosition.y, 1) == Math.Round(beam.IsocenterPosition.y, 1) && Math.Round(s5_isocenterPosition.z, 1) == Math.Round(beam.IsocenterPosition.z, 1))
                 else if (Math.Abs(s5_isocenterPosition.x - beam.IsocenterPosition.x) <= allowedDiff && Math.Abs(s5_isocenterPosition.y - beam.IsocenterPosition.y) <= allowedDiff && Math.Abs(s5_isocenterPosition.z - beam.IsocenterPosition.z) <= allowedDiff)
+                {
                     s5_numberOfPass++;
+                    allIsoPos.Add(beam.IsocenterPosition);
+                }
+                else allIsoPos.Add(beam.IsocenterPosition);
+                
 
             }
 
@@ -286,10 +294,47 @@ namespace Checklist
             else
             {
                 s5_value = "Olika isocenter mellan fälten";
+                // Generates value-string with information of the two isocenters. 
+                int i = 0;
+                string nameIso1 = "Iso 1: ";
+                string nameIso2 = "Iso 2: ";
+                VVector storedIso1 = new VVector(double.NaN, double.NaN, double.NaN);
+                VVector storedIso2 = new VVector(double.NaN, double.NaN, double.NaN);
+                if (allIsoPos.Distinct().Count() == 2)
+                {
+                    foreach (VVector v in allIsoPos)
+                    {
+                        if (v.x == s5_isocenterPosition.x && v.y == s5_isocenterPosition.y && v.z == s5_isocenterPosition.z)
+                        {
+                            nameIso1 += planSetup.Beams.ElementAt(i).Id + ", ";
+
+                            storedIso1 = planSetup.Beams.ElementAt(i).IsocenterPosition - image.UserOrigin;
+                        }
+                        else
+                        {
+                            nameIso2 += planSetup.Beams.ElementAt(i).Id + ", ";
+                            storedIso2 = planSetup.Beams.ElementAt(i).IsocenterPosition - image.UserOrigin;
+                        }
+                        s5_value_detailed += "Fält " + planSetup.Beams.ElementAt(i).Id + ": \r\nX: " + 0.1 * (planSetup.Beams.ElementAt(i).IsocenterPosition.x - image.UserOrigin.x) + " , Y: " + 0.1 * (planSetup.Beams.ElementAt(i).IsocenterPosition.z - image.UserOrigin.z) + " , Z: " + -0.1 * (planSetup.Beams.ElementAt(i).IsocenterPosition.y - image.UserOrigin.y) + ". \r\n";
+                        i++;
+                    }
+                    s5_value = "Olika isocenter mellan fälten: " + nameIso1 + " X:" + 0.1 * storedIso1.x + " Y:" + 0.1 * storedIso1.z + " Z:" + -0.1 * storedIso1.y + " \n " + nameIso2 + " X:" + 0.1 * storedIso2.x + " Y:" + 0.1 * storedIso2.z + " Z:" + -0.1 * storedIso2.y;
+                }
+                else
+                {
+                    int j = 0; 
+                    s5_value = "Minst tre isocenter mellan fälten. Vänligen korrigera: ";
+                    s5_value_detailed = "Olika isocenter mellan fälten. Vänligen korrigera: \r\n";
+                    foreach (VVector v in allIsoPos)
+                    {
+                        s5_value_detailed += "Fält " + planSetup.Beams.ElementAt(j).Id + ": \r\nX: " + 0.1*(planSetup.Beams.ElementAt(j).IsocenterPosition.x - image.UserOrigin.x) + " , Y: " + 0.1*(planSetup.Beams.ElementAt(j).IsocenterPosition.z - image.UserOrigin.z) + " , Z: " + -0.1 * (planSetup.Beams.ElementAt(j).IsocenterPosition.y - image.UserOrigin.y) + ". \r\n";
+                        j++; 
+                    }
+                }
                 s5_status = AutoCheckStatus.WARNING;
             }
 
-            checklistItems.Add(new ChecklistItem("S5. Alla fält har samma isocenter vid isocentrisk teknik", "Kontrollera att samtliga fälts (inklusive setup-fält) Isocenter sammanfaller.", s5_value, s5_status));
+            checklistItems.Add(new ChecklistItem("S5. Alla fält har samma isocenter vid isocentrisk teknik", "Kontrollera att samtliga fälts (inklusive setup-fält) Isocenter sammanfaller.", s5_value, s5_value_detailed, s5_status));
 
             string s6_value = string.Empty;
             foreach (Beam beam in planSetup.Beams)

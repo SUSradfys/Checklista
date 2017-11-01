@@ -15,10 +15,12 @@ namespace Checklist
                 checklistItems.Add(new ChecklistItem("V. VMAT/IMRT"));
 
                 string v1_value = string.Empty;
+                
                 AutoCheckStatus v1_status = AutoCheckStatus.FAIL;
                 int v1_numberOfWarnings = 0;
                 int v1_numberOfPass = 0;
                 List<double> collAngles = new List<double>();
+                List<string> lowerPTVObjectiveStructures = new List<string>(); //J Add list for name of all structures that have an lower objective
                 foreach (Beam beam in planSetup.Beams)
                 {
                     if (!beam.IsSetupField)
@@ -70,14 +72,42 @@ namespace Checklist
                     checklistItems.Add(new ChecklistItem("V2. Fältbredden är rimlig ", "Kontrollera att VMAT-fält har en rimlig fältbredd (riktvärde 15 cm, vid större target ska två arcs och delade fält övervägas).", v2_value, v2_status));
 
                     string v3_details = string.Empty;
+                    string v3_value = string.Empty;
+                    AutoCheckStatus v3_status = AutoCheckStatus.MANUAL;
                     if (planSetup.OptimizationSetup != null)
                     {
-                        /*foreach (OptimizationObjective optimizationObjective in planSetup.OptimizationSetup.Objectives)
-                            if(optimizationObjective.GetType()==typeof(OptimizationPointObjective))
-                            {
-                                OptimizationPointObjective optimizationPointObjective = (OptimizationPointObjective)optimizationObjective;
-                                v3_details += (v3_details.Length == 0 ? "Optimization objectives:\r\n  " : "\r\n  ") + optimizationPointObjective.StructureId + ": " +  optimizationPointObjective.Operator.ToString() + ", dose: " + optimizationPointObjective.Dose.Dose.ToString("0.000") + ", volume: " + optimizationPointObjective.Volume.ToString("0.0") + ", priority: " + optimizationPointObjective.Priority.ToString();
-                            }*/
+                        // JSR 
+                        List<Structure> strList = structureSet.Structures.Where(s => s.Id.StartsWith("Z_PTV")).ToList(); 
+                        
+                        
+                            foreach (OptimizationObjective optimizationObjective in planSetup.OptimizationSetup.Objectives)
+                                if (optimizationObjective.GetType() == typeof(OptimizationPointObjective))
+                                {
+                                    OptimizationPointObjective optimizationPointObjective = (OptimizationPointObjective)optimizationObjective;
+                                    if ((optimizationPointObjective.Operator.ToString().ToLower() == "lower") && optimizationPointObjective.StructureId.StartsWith("Z_PTV"))
+                                    {
+                                        // Generates a list for with name of all structures that have a lower objective (ie finds the PTVs). 
+                                        lowerPTVObjectiveStructures.Add(optimizationPointObjective.StructureId);
+                                    }
+                                    v3_details += (v3_details.Length == 0 ? "Optimization objectives:\r\n  " : "\r\n  ") + optimizationPointObjective.StructureId + ": " + optimizationPointObjective.Operator.ToString() + ", dose: " + optimizationPointObjective.Dose.Dose.ToString("0.000") + ", volume: " + optimizationPointObjective.Volume.ToString("0.0") + ", priority: " + optimizationPointObjective.Priority.ToString();
+                                }
+                        if (!strList.Any() && !lowerPTVObjectiveStructures.Any())
+                        { 
+                                v3_value += "Inget optimeringsPTV hittat, verifera"; 
+                                v3_status = AutoCheckStatus.MANUAL;
+                        }
+                        else if (strList.Any() && !lowerPTVObjectiveStructures.Any())
+                        { 
+                                v3_value += "OptimeringsPTV har ritats men ej används i optimering, vänligen verifera";
+                                v3_status = AutoCheckStatus.WARNING;
+                        }
+                        else if (strList.Any() && lowerPTVObjectiveStructures.Any())
+                        { 
+                                v3_value += "OptimeringsPTV har ritats och använts optimering, vänligen verifiera";
+                                v3_status = AutoCheckStatus.MANUAL;
+                        }
+
+                        // JSR 
                         foreach (OptimizationParameter optimizationParameter in planSetup.OptimizationSetup.Parameters)
                         {
                             if (optimizationParameter.GetType() == typeof(OptimizationPointCloudParameter))
@@ -97,7 +127,7 @@ namespace Checklist
                             }
                         }
                     }
-                    checklistItems.Add(new ChecklistItem("V3. Optimeringsbolus är korrekt använt", "Kontrollera att optimeringsbolus har använts korrekt för ytliga target:	\r\n  Eclipse H&N (VMAT):\r\n    • Optimerings-PTV har använts vid optimeringen i de fall då PTV har beskurits med hänsyn till ytterkonturen\r\n    • HELP_BODY inkluderar både patientens ytterkontur (BODY) och optimeringsbolus\r\n  Eclipse Ani, Recti (VMAT):\r\n    • BODY ska inkludera eventuellt optimeringsbolus\r\n  Optimeringsbolus i Eclipse (VMAT):\r\n    • HU för optimeringsbolus är satt till 0 HU\r\n    • Optimeringsbolus är skapat genom 5 mm (H&N) eller 6 mm (Ani, Recti) expansion från det PTV-struktur optimeringen skett på. Boluset ska ej gå innanför patientens hudyta.", string.Empty, v3_details, AutoCheckStatus.MANUAL));
+                    checklistItems.Add(new ChecklistItem("V3. Optimeringsbolus och optimeringsPTV är korrekt använt", "Kontrollera att optimeringsbolus har använts korrekt för ytliga target:	\r\n  Eclipse H&N (VMAT):\r\n    • Optimerings-PTV har använts vid optimeringen i de fall då PTV har beskurits med hänsyn till ytterkonturen\r\n    • HELP_BODY inkluderar både patientens ytterkontur (BODY) och optimeringsbolus\r\n  Eclipse Ani, Recti (VMAT):\r\n    • BODY ska inkludera eventuellt optimeringsbolus\r\n  Optimeringsbolus i Eclipse (VMAT):\r\n    • HU för optimeringsbolus är satt till 0 HU\r\n    • Optimeringsbolus är skapat genom 5 mm (H&N) eller 6 mm (Ani, Recti) expansion från det PTV-struktur optimeringen skett på. Boluset ska ej gå innanför patientens hudyta.", v3_value, v3_details, v3_status)); //JSR
 
                     checklistItems.Add(new ChecklistItem("V4. Robusthet", "Kontrollera planens robusthet m.a.p. ISO-center-förskjutning m.h.a. Uncertainty-planer. Planerna skapas av dosplaneraren.\r\n    • Skillnaderna i maxdos för uncertainty-planerna (±0,4 cm i x, y, resp. z) är <5% relativt originalplanen.\r\n    • CTV täckning är acceptabel.", string.Empty, AutoCheckStatus.MANUAL));
 

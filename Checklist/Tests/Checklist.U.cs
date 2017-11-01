@@ -12,7 +12,7 @@ namespace Checklist
     {
         public void U() // The name U is kept for historical reasons. Might change to R in future versions.
         {
-            checklistItems.Add(new ChecklistItem("R. Remiss/Ordination"));
+            checklistItems.Add(new ChecklistItem("R. Strålanmälan/Ordination"));
 
             string r1_imageid = string.Empty;
             if (planSetup.StructureSet != null && planSetup.StructureSet.Image != null)
@@ -28,7 +28,7 @@ namespace Checklist
                 if (count > 1)
                     MessageBox.Show(remark, "Aktuella remarks");
             }
-            checklistItems.Add(new ChecklistItem("R1. Jämför id (course, plan, CT-set, patient) mellan remiss, protokoll och Aria", "Kontrollera att \r\n  • Patientens personnummer stämmer överens mellan remiss, protokoll och Aria\r\n  • Course, plannamn och CT-set stämmer överens mellan protokoll och Aria.", r1_value, AutoCheckStatus.MANUAL));
+            checklistItems.Add(new ChecklistItem("R1. Jämför id (course, plan, CT-set, patient) mellan strålanmälan, protokoll och Aria", "Kontrollera att \r\n  • Patientens personnummer stämmer överens mellan strålanmälan, protokoll och Aria\r\n  • Course, plannamn och CT-set stämmer överens mellan protokoll och Aria.", r1_value, AutoCheckStatus.MANUAL));
 
             AutoCheckStatus r2_status = AutoCheckStatus.FAIL;
             string r2_value = string.Empty;

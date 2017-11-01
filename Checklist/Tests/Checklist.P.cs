@@ -433,7 +433,7 @@ namespace Checklist
             {
                 p11_status = AutoCheckStatus.FAIL;
             }
-            checklistItems.Add(new ChecklistItem("P11. Normering är korrekt", "Kontrollera att planen är normerad på korrekt vis \r\n  • Icke-normerade planer accepteras ej. \r\n  • Normalt till targetvolymens medeldos (om särskilt skäl föreligger kan en punktnormering användas). \r\n  • För stereotaktiska lungor i Eclipse normeras dosen till isocenter och ordineras till 75%-isodosen.\r\n  • För VMAT ska Plan Normalization Value skall normeringsvärdet vara i intervallet [0.970, 1.030].", p11_value, p11_status));
+            checklistItems.Add(new ChecklistItem("P11. Normering är korrekt", "Kontrollera att planen är normerad på korrekt vis \r\n  • Icke-normerade planer accepteras ej. \r\n  • Normalt till targetvolymens mediandos (om särskilt skäl föreligger kan en punktnormering användas). \r\n  • För stereotaktiska lungor i Eclipse normeras dosen till isocenter och ordineras till 75%-isodosen.\r\n  • För VMAT ska Plan Normalization Value skall normeringsvärdet vara i intervallet [0.970, 1.030].", p11_value, p11_status));
 
             string p12_value = string.Empty;            
             string p13_value = string.Empty;
