@@ -67,7 +67,7 @@ namespace Checklist
                     if (fieldsOnOppositeSide == false)
                     {
                         foreach (KeyValuePair<string, double> entry in s2_gantryAngles)
-                            if (entry.Value <= 270 && entry.Value > 180)
+                            if (entry.Value <= 270 && entry.Value > 180 && checklistType != ChecklistType.EclipseVMAT) //added to ignore vmat to avoid error for elekta vmat
                             {
                                 s2_status = AutoCheckStatus.WARNING;
                                 s2_value_detail += (s2_value_detail.Length == 0 ? String.Empty : "\r\n") + entry.Key + ": " + entry.Value.ToString("0.0");
@@ -83,7 +83,7 @@ namespace Checklist
                     if (fieldsOnOppositeSide == false)
                     {
                         foreach (KeyValuePair<string, double> entry in s2_gantryAngles)
-                            if (entry.Value >= 90 && entry.Value <= 180)
+                            if (entry.Value >= 90 && entry.Value <= 180 && checklistType != ChecklistType.EclipseVMAT) //added to ignore vmat avoid error for elekta vmat
                             { 
                                 s2_status = AutoCheckStatus.WARNING;
                                 s2_value_detail += (s2_value_detail.Length == 0 ? String.Empty : "\r\n") + entry.Key + ": " + entry.Value.ToString("0.0");
@@ -189,6 +189,7 @@ namespace Checklist
             AutoCheckStatus s3_status = AutoCheckStatus.UNKNOWN;
             List<double> s3_setupFieldAngles = new List<double>();
             List<double> s4_setupFieldAngles = new List<double>();
+            List<double> s4_FieldAngles = new List<double>();
             List<string> s3_beamIds = new List<string>();
             foreach (Beam beam in planSetup.Beams)
                 if (beam.IsSetupField && !Operators.LikeString(beam.Id.ToLower(), "Uppl*gg".ToLower(), CompareMethod.Text))
@@ -197,6 +198,10 @@ namespace Checklist
                     s4_setupFieldAngles.Add(beam.ControlPoints[0].PatientSupportAngle);
                     s3_beamIds.Add(beam.Id.ToLower());
                     s3_value += (s3_value.Length == 0 ? "Sida: " + treatmentSide.ToString() + ", " : ", ") + beam.Id + ": " + beam.ControlPoints[0].GantryAngle.ToString("0.0");
+                }
+                else if (!beam.IsSetupField)
+                {
+                    s4_FieldAngles.Add(beam.ControlPoints[0].PatientSupportAngle);
                 }
             int s3_cbctIndex = s3_beamIds.IndexOf("cbct");
             if (treatmentUnitManufacturer == TreatmentUnitManufacturer.Varian)
@@ -233,7 +238,7 @@ namespace Checklist
                 }
             }
             else
-                s3_status = AutoCheckStatus.MANUAL; // If not Varian, then do manual check of setup angles.
+            s3_status = AutoCheckStatus.MANUAL; // If not Varian, then do manual check of setup angles.
             s3_value = reorderBeamParam(s3_value, ",");
             checklistItems.Add(new ChecklistItem("S3. Gantryvinklar för setupfälten är korrekta", "Kontrollera att setupfältens gantryvinklar är korrekta (patientgeometrin avgör vinklar)\r\n  • Standard: 270° respektive 0°\r\n•  • Högersidiga behandlingar: 180° respektive 270°", s3_value, s3_status));
 
@@ -247,7 +252,21 @@ namespace Checklist
                     s4_status = AutoCheckStatus.WARNING;
                 }
             }
+            
             s4_value = reorderBeamParam(s4_value, ",");
+            //Gives manual if sum of all setupfields are 0 but tx fields are different. Gives auto OK if ALL fields have tableangle 0; 
+            if (s4_setupFieldAngles.Sum() == 0 && s4_FieldAngles.Sum() != 0)
+            {
+                s4_status = AutoCheckStatus.MANUAL;
+                s4_value = "Alla setupfält har golvvinkel 0°, behandlingsfält har ej golvvinkel 0°"; 
+            }
+            if (s4_setupFieldAngles.Sum() == 0 && s4_FieldAngles.Sum() == 0)
+            {
+                s4_status = AutoCheckStatus.PASS;
+                s4_value = "Alla setupfält och behandlingsfält har golvvinkel 0°";
+            }
+
+
             checklistItems.Add(new ChecklistItem("S4. Golvvinklar för setupfälten är korrekta", "Kontrollera att setupfältens golvvinklar är korrekta. Om ej särskilda anledningar föreligger ska golvvinkel för samtliga setupfält vara 0°", s4_value, s4_status));
 
             string s5_value;

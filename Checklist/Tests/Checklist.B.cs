@@ -18,18 +18,33 @@ namespace Checklist
             if (planSetup.StructureSet != null)
             {
                 bool tpsBolusExist = false;
+                bool tpsBolusLinkedToField = false; 
                 foreach (Structure structure in planSetup.StructureSet.Structures)
                 {
                     if (string.Compare(structure.DicomType, "BOLUS") == 0)
+                    {
                         tpsBolusExist = true;
+                        
+                    }
+                }
+                foreach (Beam b in planSetup.Beams)
+                {
+                    if (b.Boluses.Count() > 0)
+                        tpsBolusLinkedToField = true;
+
                 }
                 if (!tpsBolusExist)
                 {
                     b1_value = "Ej ansatt";
                     b1_status = AutoCheckStatus.PASS;
                 }
-                else
-                    b1_value = "Bolus har ansatts i TPS";
+                else if (tpsBolusExist && !tpsBolusLinkedToField)
+                {
+                    b1_value = "Bolus har ansatts i TPS, men ej kopplats till minst ett fält. Verifera.";
+                    b1_status = AutoCheckStatus.WARNING;
+                }
+                else if (tpsBolusExist && tpsBolusLinkedToField)
+                    b1_value = "Bolus har ansatts i TPS, och kopplats till minst ett fält. Verifiera.";
             }
             else
                 b1_value = "StructureSet saknas";
