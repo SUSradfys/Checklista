@@ -67,7 +67,7 @@ namespace Checklist
                     if (fieldsOnOppositeSide == false)
                     {
                         foreach (KeyValuePair<string, double> entry in s2_gantryAngles)
-                            if (entry.Value <= 270 && entry.Value > 180)
+                            if (entry.Value <= 270 && entry.Value > 180 && checklistType != ChecklistType.EclipseVMAT) //added to ignore vmat to avoid error for elekta vmat
                             {
                                 s2_status = AutoCheckStatus.WARNING;
                                 s2_value_detail += (s2_value_detail.Length == 0 ? String.Empty : "\r\n") + entry.Key + ": " + entry.Value.ToString("0.0");
@@ -83,7 +83,7 @@ namespace Checklist
                     if (fieldsOnOppositeSide == false)
                     {
                         foreach (KeyValuePair<string, double> entry in s2_gantryAngles)
-                            if (entry.Value >= 90 && entry.Value <= 180)
+                            if (entry.Value >= 90 && entry.Value <= 180 && checklistType != ChecklistType.EclipseVMAT) //added to ignore vmat avoid error for elekta vmat
                             { 
                                 s2_status = AutoCheckStatus.WARNING;
                                 s2_value_detail += (s2_value_detail.Length == 0 ? String.Empty : "\r\n") + entry.Key + ": " + entry.Value.ToString("0.0");
@@ -189,6 +189,7 @@ namespace Checklist
             AutoCheckStatus s3_status = AutoCheckStatus.UNKNOWN;
             List<double> s3_setupFieldAngles = new List<double>();
             List<double> s4_setupFieldAngles = new List<double>();
+            List<double> s4_FieldAngles = new List<double>();
             List<string> s3_beamIds = new List<string>();
             foreach (Beam beam in planSetup.Beams)
                 if (beam.IsSetupField && !Operators.LikeString(beam.Id.ToLower(), "Uppl*gg".ToLower(), CompareMethod.Text))
@@ -197,6 +198,10 @@ namespace Checklist
                     s4_setupFieldAngles.Add(beam.ControlPoints[0].PatientSupportAngle);
                     s3_beamIds.Add(beam.Id.ToLower());
                     s3_value += (s3_value.Length == 0 ? "Sida: " + treatmentSide.ToString() + ", " : ", ") + beam.Id + ": " + beam.ControlPoints[0].GantryAngle.ToString("0.0");
+                }
+                else if (!beam.IsSetupField)
+                {
+                    s4_FieldAngles.Add(beam.ControlPoints[0].PatientSupportAngle);
                 }
             int s3_cbctIndex = s3_beamIds.IndexOf("cbct");
             if (treatmentUnitManufacturer == TreatmentUnitManufacturer.Varian)
@@ -233,7 +238,7 @@ namespace Checklist
                 }
             }
             else
-                s3_status = AutoCheckStatus.MANUAL; // If not Varian, then do manual check of setup angles.
+            s3_status = AutoCheckStatus.MANUAL; // If not Varian, then do manual check of setup angles.
             s3_value = reorderBeamParam(s3_value, ",");
             checklistItems.Add(new ChecklistItem("S3. Gantryvinklar för setupfälten är korrekta", "Kontrollera att setupfältens gantryvinklar är korrekta (patientgeometrin avgör vinklar)\r\n  • Standard: 270° respektive 0°\r\n•  • Högersidiga behandlingar: 180° respektive 270°", s3_value, s3_status));
 
@@ -247,20 +252,37 @@ namespace Checklist
                     s4_status = AutoCheckStatus.WARNING;
                 }
             }
+            
             s4_value = reorderBeamParam(s4_value, ",");
+            //Gives manual if sum of all setupfields are 0 but tx fields are different. Gives auto OK if ALL fields have tableangle 0; 
+            if (s4_setupFieldAngles.Sum() == 0 && s4_FieldAngles.Sum() != 0)
+            {
+                s4_status = AutoCheckStatus.MANUAL;
+                s4_value = "Alla setupfält har golvvinkel 0°, behandlingsfält har ej golvvinkel 0°"; 
+            }
+            if (s4_setupFieldAngles.Sum() == 0 && s4_FieldAngles.Sum() == 0)
+            {
+                s4_status = AutoCheckStatus.PASS;
+                s4_value = "Alla setupfält och behandlingsfält har golvvinkel 0°";
+            }
+
+
             checklistItems.Add(new ChecklistItem("S4. Golvvinklar för setupfälten är korrekta", "Kontrollera att setupfältens golvvinklar är korrekta. Om ej särskilda anledningar föreligger ska golvvinkel för samtliga setupfält vara 0°", s4_value, s4_status));
 
             string s5_value;
             AutoCheckStatus s5_status = AutoCheckStatus.FAIL;
+            string s5_value_detailed = string.Empty;
             int s5_numberOfPass = 0;
             bool s5_isocenterCouldNotBeDetermined = false;
             VVector s5_isocenterPosition = new VVector(double.NaN, double.NaN, double.NaN);
+            List<VVector> allIsoPos = new List<VVector>();
             foreach (Beam beam in planSetup.Beams)
             {
-                double allowedDiff = 0.5;  // the allowed difference between isocenters in mm
+                double allowedDiff = 0.0;  // the allowed difference between isocenters in mm
                 if (double.IsNaN(s5_isocenterPosition.x) && double.IsNaN(s5_isocenterPosition.y) && double.IsNaN(s5_isocenterPosition.z))
                 {
                     s5_isocenterPosition = beam.IsocenterPosition;
+                    allIsoPos.Add(s5_isocenterPosition);
                     if (double.IsNaN(beam.IsocenterPosition.x) == false && double.IsNaN(beam.IsocenterPosition.y) == false && double.IsNaN(beam.IsocenterPosition.z) == false)
                         s5_numberOfPass++;
                     else
@@ -269,7 +291,12 @@ namespace Checklist
 
                 //else if (Math.Round(s5_isocenterPosition.x, 1) == Math.Round(beam.IsocenterPosition.x, 1) && Math.Round(s5_isocenterPosition.y, 1) == Math.Round(beam.IsocenterPosition.y, 1) && Math.Round(s5_isocenterPosition.z, 1) == Math.Round(beam.IsocenterPosition.z, 1))
                 else if (Math.Abs(s5_isocenterPosition.x - beam.IsocenterPosition.x) <= allowedDiff && Math.Abs(s5_isocenterPosition.y - beam.IsocenterPosition.y) <= allowedDiff && Math.Abs(s5_isocenterPosition.z - beam.IsocenterPosition.z) <= allowedDiff)
+                {
                     s5_numberOfPass++;
+                    allIsoPos.Add(beam.IsocenterPosition);
+                }
+                else allIsoPos.Add(beam.IsocenterPosition);
+                
 
             }
 
@@ -286,10 +313,47 @@ namespace Checklist
             else
             {
                 s5_value = "Olika isocenter mellan fälten";
+                // Generates value-string with information of the two isocenters. 
+                int i = 0;
+                string nameIso1 = "Iso 1: ";
+                string nameIso2 = "Iso 2: ";
+                VVector storedIso1 = new VVector(double.NaN, double.NaN, double.NaN);
+                VVector storedIso2 = new VVector(double.NaN, double.NaN, double.NaN);
+                if (allIsoPos.Distinct().Count() == 2)
+                {
+                    foreach (VVector v in allIsoPos)
+                    {
+                        if (v.x == s5_isocenterPosition.x && v.y == s5_isocenterPosition.y && v.z == s5_isocenterPosition.z)
+                        {
+                            nameIso1 += planSetup.Beams.ElementAt(i).Id + ", ";
+
+                            storedIso1 = planSetup.Beams.ElementAt(i).IsocenterPosition - image.UserOrigin;
+                        }
+                        else
+                        {
+                            nameIso2 += planSetup.Beams.ElementAt(i).Id + ", ";
+                            storedIso2 = planSetup.Beams.ElementAt(i).IsocenterPosition - image.UserOrigin;
+                        }
+                        s5_value_detailed += "Fält " + planSetup.Beams.ElementAt(i).Id + ": \r\nX: " + 0.1 * (planSetup.Beams.ElementAt(i).IsocenterPosition.x - image.UserOrigin.x) + " , Y: " + 0.1 * (planSetup.Beams.ElementAt(i).IsocenterPosition.z - image.UserOrigin.z) + " , Z: " + -0.1 * (planSetup.Beams.ElementAt(i).IsocenterPosition.y - image.UserOrigin.y) + ". \r\n";
+                        i++;
+                    }
+                    s5_value = "Olika isocenter mellan fälten: " + nameIso1 + " X:" + 0.1 * storedIso1.x + " Y:" + 0.1 * storedIso1.z + " Z:" + -0.1 * storedIso1.y + " \n " + nameIso2 + " X:" + 0.1 * storedIso2.x + " Y:" + 0.1 * storedIso2.z + " Z:" + -0.1 * storedIso2.y;
+                }
+                else
+                {
+                    int j = 0; 
+                    s5_value = "Minst tre isocenter mellan fälten. Vänligen korrigera: ";
+                    s5_value_detailed = "Olika isocenter mellan fälten. Vänligen korrigera: \r\n";
+                    foreach (VVector v in allIsoPos)
+                    {
+                        s5_value_detailed += "Fält " + planSetup.Beams.ElementAt(j).Id + ": \r\nX: " + 0.1*(planSetup.Beams.ElementAt(j).IsocenterPosition.x - image.UserOrigin.x) + " , Y: " + 0.1*(planSetup.Beams.ElementAt(j).IsocenterPosition.z - image.UserOrigin.z) + " , Z: " + -0.1 * (planSetup.Beams.ElementAt(j).IsocenterPosition.y - image.UserOrigin.y) + ". \r\n";
+                        j++; 
+                    }
+                }
                 s5_status = AutoCheckStatus.WARNING;
             }
 
-            checklistItems.Add(new ChecklistItem("S5. Alla fält har samma isocenter vid isocentrisk teknik", "Kontrollera att samtliga fälts (inklusive setup-fält) Isocenter sammanfaller.", s5_value, s5_status));
+            checklistItems.Add(new ChecklistItem("S5. Alla fält har samma isocenter vid isocentrisk teknik", "Kontrollera att samtliga fälts (inklusive setup-fält) Isocenter sammanfaller.", s5_value, s5_value_detailed, s5_status));
 
             string s6_value = string.Empty;
             foreach (Beam beam in planSetup.Beams)
