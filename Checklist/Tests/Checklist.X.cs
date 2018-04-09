@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using VMS.TPS.Common.Model.API;
+using VMS.TPS.Common.Model.Types;
 
 namespace Checklist
 {
@@ -73,17 +74,71 @@ namespace Checklist
                         if (row["SetupNote"].ToString().IndexOf(defSetup) >= 0)
                         x3_status = AutoCheckStatus.PASS;
                     }
-                    if (x3_status == AutoCheckStatus.FAIL)
-                        Clipboard.SetText(defSetup + "\r\n");
-                checklistItems.Add(new ChecklistItem("X3. Notera icke coplanar VMAT under Setup note", "Planen i fråga är en icke coplanar VMAT behandling. Säkerställ att en notering om detta finns under planens Setup note. Den exakta formuleringen ska vara: \r\n" + defSetup, string.Empty, x3_status));
+                if (x3_status == AutoCheckStatus.FAIL)
+                {
+                    Clipboard.SetText(defSetup + "\r\n");
+                    checklistItems.Add(new ChecklistItem("X3. Notera icke coplanar VMAT under Setup note", "Planen i fråga är en icke coplanar VMAT behandling. Säkerställ att en notering om detta finns under planens Setup note. Den exakta formuleringen ska vara: \r\n" + defSetup, string.Empty, defSetup, x3_status));
+                }
+                else
+                    checklistItems.Add(new ChecklistItem("X3. Notera icke coplanar VMAT under Setup note", "Planen i fråga är en icke coplanar VMAT behandling. Säkerställ att en notering om detta finns under planens Setup note. Den exakta formuleringen ska vara: \r\n" + defSetup, string.Empty, x3_status));
             }
 
             if (checklistType == ChecklistType.Eclipse || checklistType == ChecklistType.EclipseGating)
                 checklistItems.Add(new ChecklistItem("X4. Genomför oberoende MU-kontroll", "Genomför obeorende MU-kontroll via RVP", "", AutoCheckStatus.MANUAL));
 
             if (checklistType == ChecklistType.EclipseVMAT)
-                checklistItems.Add(new ChecklistItem("X5. QC Course sätts till Completed.", "Sätt status på QC coursen till Completed.", "", AutoCheckStatus.MANUAL));
+            {
+                AutoCheckStatus x5_status = AutoCheckStatus.MANUAL; 
+                string x5_value = string.Empty;
+                string x5_details = string.Empty;
+                //lägg till kontroll att QC - plan finns och ger annars varning. WORK in progress
+                //List<PlanSetup> allplans = patient.Courses.SelectMany(p => p.PlanSetups).ToList();
+                //List<PlanSetup> verpallplans = allplans.Where(p => p.PlanIntent == "VERIFICATION").ToList();
+                //List<PlanSetup> corrverplans = new List<PlanSetup>();
 
+                //var verpallplansFilter = verpallplans.Where(x => x.VerifiedPlan != null).ToList();
+                //var testuid = verpallplansFilter.Select(x => x.VerifiedPlan.UID).ToList();
+                //    //foreach (PlanSetup p in verpallplansFilter)
+                //    //{
+                   
+                   
+                        
+                    //    string curuid = p.VerifiedPlan.UID; 
+                    //    if (curuid == planSetup.UID)
+                    //        corrverplans.Add(p); 
+                  
+                    //}
+                
+                //int noQCplans = verpallplans.Count();
+                //List<PlanSetup> corallplans = corrverplans.Where(p => p.Id.ToLower().Contains("qc") && p.Id.ToLower().Contains(planSetup.Id.ToLower().Substring(0, 3)) && p.Id.ToLower().Contains("d") && p.Id.ToLower().Contains("4")).ToList();
+
+                //// Note if
+                //try
+                //{
+                //    if (noQCplans > 0 && allplans.Count() == 0)
+
+                //    {
+                //        x5_status = AutoCheckStatus.WARNING;
+                //        x5_value = "Det finns " + noQCplans + " QC-plan(er) kopplade till planen, men är inkorrekt namngivna.";
+                //        x5_details = "Korrekt namngivning av QC-planer är: QC PX_X d4 eller QC PX_X delta4";
+                //    }
+                //    if (allplans.Count() > 1)
+                //    {
+                //        x5_status = AutoCheckStatus.MANUAL;
+                //        string ids = string.Empty;
+                //        foreach (PlanSetup p in allplans)
+                //            ids = ids + (ids.Length == 0 ? p.Id : ", " + p.Id);
+                //        x5_value = "QC-planer finns och är korrekt namngivna: " + ids;
+
+                //    }
+                //}
+                //catch (Exception exception)
+                //{
+                //    x5_value = "Problem med att hitta QC-planer..." + exception.Message;
+                //}
+
+                checklistItems.Add(new ChecklistItem("X5. QC Course sätts till Completed.", "Sätt status på QC coursen till Completed.", x5_value, x5_details, x5_status));
+            }
             if (checklistType == ChecklistType.EclipseGating && image.Comment.IndexOf("DIBH") != -1 || checklistType == ChecklistType.EclipseGating && image.Comment.IndexOf("BH") != -1)
             {
                 double[] deltaCouch = new double[3];
@@ -96,13 +151,13 @@ namespace Checklist
                 checklistItems.Add(new ChecklistItem("X6. Fyll i värden för Delta Couch.", "Fyll i beräknade Delta Couch-värden för planens alla fält.", String.Format("Vrt: {0:N2} cm, Lng: {1:N2} cm, Lat: {2:N2} cm", deltaCouch[2], deltaCouch[1], deltaCouch[0]), String.Format("Delta Couch shift (cm):\r\nVrt:\t{0:N2}\r\nLng:\t{1:N2}\r\nLat:\t{2:N2}", deltaCouch[2], deltaCouch[1], deltaCouch[0]), AutoCheckStatus.MANUAL));
                 
                 
-                checklistItems.Add(new ChecklistItem("X7. Importera underlag till Catalyst.", "Importera plan och strukturset till Catalyst i enlighet med gällande metodbeskrivning.", String.Empty, AutoCheckStatus.MANUAL));
+                //checklistItems.Add(new ChecklistItem("X7. Importera underlag till Catalyst.", "Importera plan och strukturset till Catalyst i enlighet med gällande metodbeskrivning.", String.Empty, AutoCheckStatus.MANUAL));
 
             }
 
-            checklistItems.Add(new ChecklistItem("X8. Treatment Approved", "Gör planen Treatment Approved. Planen får endast göras Treatment Approved efter att ovanstående kontroller är utförda och Oberoende MU-kontroll eller QC-mätning är godkänd.", string.Empty, AutoCheckStatus.MANUAL));
+            checklistItems.Add(new ChecklistItem("X7. Treatment Approved", "Gör planen Treatment Approved. Planen får endast göras Treatment Approved efter att ovanstående kontroller är utförda och Oberoende MU-kontroll eller QC-mätning är godkänd.", string.Empty, AutoCheckStatus.MANUAL));
 
-            checklistItems.Add(new ChecklistItem("X9. Task sätts till Done", "Tryck Done när alla kontroller är klara\r\n  • Ändra Qty till det antal planer som har kontrollerats\r\n  • Om planen har kontrollmätts tycker man Done först när planen både är kontrollerad och kontrollmätt", string.Empty, AutoCheckStatus.MANUAL));
+            checklistItems.Add(new ChecklistItem("X8. Task sätts till Done", "Tryck Done när alla kontroller är klara\r\n  • Ändra Qty till det antal planer som har kontrollerats\r\n  • Om planen har kontrollmätts tycker man Done först när planen både är kontrollerad och kontrollmätt", string.Empty, AutoCheckStatus.MANUAL));
 
             //checklistItems.Add(new ChecklistItem("X5. Signera i rutan Fysiker kontroll", "Genomgången checklista med accepterat resultat bekräftas med signatur i behandlingskortet i rutan Fysiker kontroll.", string.Empty, AutoCheckStatus.MANUAL));
         }
