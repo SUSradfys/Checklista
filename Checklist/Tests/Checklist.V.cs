@@ -74,8 +74,6 @@ namespace Checklist
                     string v3_value = string.Empty;
                     AutoCheckStatus v3_status = AutoCheckStatus.MANUAL;
                     
-
-                    
                     checklistItems.Add(new ChecklistItem("V3. Optimeringsbolus är korrekt använt", "Kontrollera att optimeringsbolus har använts korrekt för ytliga target:	\r\n  Eclipse H&N (VMAT):\r\n    • Optimeringsbolus har använts vid optimeringen i de fall då PTV ligger mindre än 4 mm innanför ytterkonturen.\r\n    • BODY ska inkludera eventuellt optimeringsbolus\r\n  Eclipse Ani, Recti (VMAT):\r\n    • BODY ska inkludera eventuellt optimeringsbolus\r\n  Optimeringsbolus i Eclipse (VMAT):\r\n    • HU för optimeringsbolus är satt till 0 HU\r\n    • Optimeringsbolus är skapat genom 5 mm (H&N) eller 6 mm (Ani, Recti) expansion från det PTV-struktur optimeringen skett på. Boluset ska ej gå innanför patientens hudyta.", v3_value, v3_details, v3_status)); //JSR
 
                     checklistItems.Add(new ChecklistItem("V4. Robusthet", "Kontrollera planens robusthet m.a.p. ISO-center-förskjutning m.h.a. Uncertainty-planer. Planerna skapas av dosplaneraren.\r\n    • Skillnaderna i maxdos för uncertainty-planerna (±0,4 cm i x, y, resp. z) är <5% relativt originalplanen.\r\n    • CTV täckning är acceptabel.", string.Empty, AutoCheckStatus.MANUAL));

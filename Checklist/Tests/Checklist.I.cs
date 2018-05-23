@@ -90,7 +90,7 @@ namespace Checklist
                 case 0:
                     if (i3_status != AutoCheckStatus.FAIL)
                         i3_status = AutoCheckStatus.WARNING;
-                    i3_value = "Saknas";
+                    i3_value = "Ordination saknas";
                     break;
                 case 1:
                     if (prescription.Rows[0]["Gating"] != DBNull.Value)

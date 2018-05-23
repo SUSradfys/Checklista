@@ -105,6 +105,7 @@ namespace Checklist
                 D();
                 P();                
                 V();
+                C();
                 M();
                 B();
                 S();

@@ -116,12 +116,12 @@ namespace Checklist
                             double wedgedMU;
                             GetMU(beam, out openMU, out wedgedMU);
 
-                            if (beam.EnergyModeDisplayName.IndexOf("FFF") != -1)
+                            if (beam.EnergyModeDisplayName.IndexOf("FFF") != -1 && !(checklistType == ChecklistType.EclipseConformal) && !(checklistType == ChecklistType.EclipseVMAT))
                             {
                                 if (openMU < 600 && treatmentTime == 0.5)
                                     p3_numberOfPass++;
                             }
-                            else if (checklistType == ChecklistType.EclipseVMAT)
+                            else if (checklistType == ChecklistType.EclipseVMAT || checklistType == ChecklistType.EclipseConformal)
                             {
                                 // For VMAT use treatmentTime=2 if MU<=400, otherwise treatmentTime = min(5.0, max(3.0, ceil(MU/(DoseRate/N)))), where N=2
                                 int doseRateFactor = 2;
@@ -135,6 +135,7 @@ namespace Checklist
                                 else if (openMU > 400 && treatmentTime == 3)
                                     p3_numberOfPass++;
                                 */
+                                
                             }
                             else if (checklistType == ChecklistType.EclipseGating)
                             {
@@ -228,7 +229,7 @@ namespace Checklist
             */
             checklistItems.Add(new ChecklistItem("P4. Use Gated är korrekt", "Kontrollera att rutan Use Gated under Plan properties svarar mot ordination.", p4_value, p4_status));
 
-            if (checklistType == ChecklistType.EclipseGating)
+            if (false)//checklistType == ChecklistType.EclipseGating)
             {
                 string p5_value = string.Empty;
                 AutoCheckStatus p5_status = AutoCheckStatus.FAIL;
@@ -380,7 +381,7 @@ namespace Checklist
             p9_value_detailed = reorderBeamParam(p9_value_detailed, "\r\n\r\n");
             checklistItems.Add(new ChecklistItem("P9. Fälten ser rimliga ut vad gäller form, energi, MU och korrektion av artefakter", "Kontrollera att fälten ser rimliga ut vad gäller form, energi, MU och korrektion av artefakter\r\n  • Riktlinje för RapidArc är max 300 MU/Gy om bländarna är utanför target under hela varvet (sett ur BEV). Vid delvis skärmat target är denna gräns max 550 MU/Gy.\r\n  • Öppna fält ska ha ≥10 MU.\r\n  • Fält med dynamisk kil (Varian) ska ha minst 20 MU.\r\n  • Fält med fast kil (Elekta) ska ha ≥30 kilade MU.\r\n  •  För Elekta gäller dessutom att totala antalet MU per fält (öppet + kilat) ej får överstiga 999 MU.", p9_value, p9_value_detailed, p9_status));
 
-            if (checklistType != ChecklistType.EclipseVMAT)
+            if (checklistType != ChecklistType.EclipseVMAT && checklistType != ChecklistType.EclipseConformal)
             { 
                 if (treatmentUnitManufacturer == TreatmentUnitManufacturer.Elekta)
                 {
@@ -433,7 +434,7 @@ namespace Checklist
             {
                 p11_status = AutoCheckStatus.FAIL;
             }
-            checklistItems.Add(new ChecklistItem("P11. Normering är korrekt", "Kontrollera att planen är normerad på korrekt vis \r\n  • Icke-normerade planer accepteras ej. \r\n  • Normalt till targetvolymens mediandos (om särskilt skäl föreligger kan en punktnormering användas). \r\n  • För stereotaktiska lungor i Eclipse normeras dosen till isocenter och ordineras till 75%-isodosen.\r\n  • För VMAT ska Plan Normalization Value skall normeringsvärdet vara i intervallet [0.970, 1.030].", p11_value, p11_status));
+            checklistItems.Add(new ChecklistItem("P11. Normering är korrekt", "Kontrollera att planen är normerad på korrekt vis \r\n  • Icke-normerade planer accepteras ej. \r\n  • Normalt till targetvolymens mediandos (om särskilt skäl föreligger kan en punktnormering användas). \r\n  • För stereotaktiska lungor i Eclipse normeras dosen till isocenter och ordineras till 75%-isodosen.\r\n  • För stereotaktiska kotor/skelett normeras planen så att volymen som täcker 95% av PTV-volymen är ordinerad dos (normal 30 Gy). \r\n  • För VMAT ska Plan Normalization Value skall normeringsvärdet vara i intervallet [0.970, 1.030].", p11_value, p11_status));
 
             string p12_value = string.Empty;            
             string p13_value = string.Empty;

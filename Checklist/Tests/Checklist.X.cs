@@ -29,17 +29,56 @@ namespace Checklist
                     if (planSetup.Beams.Count() > 0)
                     {
                         double userY = -image.UserOrigin.y * 0.1;
-                        double isoY = -(planSetup.Beams.First().IsocenterPosition.y - image.UserOrigin.y) * 0.1;
-                        if (planSetup.TreatmentOrientation.ToString().IndexOf("Prone") != -1) // Change sign if Orientation is Prone.
-                        { 
-                            isoY *= -1;
-                            userY *= -1;
+                        IEnumerable<Beam> txBeams = planSetup.Beams.Where(x => x.IsSetupField == false); 
+                        //Summarises all ssds for treatment beams, if this is > x*1000 the bool will be true. 
+                        bool fhaTechnique = txBeams.Select(x => Math.Round(x.SSD)).ToList().Sum() >= (double)txBeams.Count() * 1000;
+                        IEnumerable<VVector> uniqueIsos = new List<VVector>(); 
+                        if (fhaTechnique)
+                           uniqueIsos = GetAllIsocenters(planSetup);
+                        if (uniqueIsos.Count() > 1 && uniqueIsos.Count() <= 2) //This part will give 2 different couch positions based if there are 2 isocenters. 
+                        {
+                            bool warningToggle = false;
+                            double firstIsoYPos = double.NaN;
+                            foreach (Beam beam in planSetup.Beams)
+                            {
+                                
+                                if (!beam.IsSetupField && !(firstIsoYPos==-(beam.IsocenterPosition.y - image.UserOrigin.y) * 0.1))
+                                {
+                                    double isoY = -(beam.IsocenterPosition.y - image.UserOrigin.y) * 0.1;
+                                    
+                                    if (planSetup.TreatmentOrientation.ToString().IndexOf("Prone") != -1) // Change sign if Orientation is Prone.
+                                    {
+                                        isoY *= -1;
+                                        userY *= -1;
+                                    }
+                                    double shiftY = 7.1;
+                                    double sumY = -isoY - userY + shiftY;
+                                    x2_value += ", Beräknad britshöjd " +(Double.IsNaN(firstIsoYPos) ? "Iso 1: ": "Iso 2: ") + (-userY).ToString("0.0") + (-isoY >= 0 ? "+" : string.Empty) + (-isoY).ToString("0.0") + "+" + shiftY.ToString("0.0") + " = " + sumY.ToString("0.0") + " cm";
+                                    if (sumY < -30 && !warningToggle)
+                                        x2_status = AutoCheckStatus.WARNING;
+                                    if (Double.IsNaN(firstIsoYPos))
+                                        firstIsoYPos = isoY;
+                                }
+                            }
                         }
-                        double shiftY = 7.1;
-                        double sumY = -isoY - userY + shiftY;
-                        x2_value += ", Beräknad britshöjd: " + (-userY).ToString("0.0") + (-isoY >= 0 ? "+" : string.Empty) + (-isoY).ToString("0.0") + "+" + shiftY.ToString("0.0") + " = " + sumY.ToString("0.0") + " cm";
-                        if (sumY < -30)
-                            x2_status = AutoCheckStatus.WARNING;
+                        else if (uniqueIsos.Count() > 2) // if more that 2 isos it will promp the user to measure manually. 
+                        {
+                            x2_value += ", Mer än tre iso mät positioner manuellt";
+                        }
+                        else
+                        {
+                            double isoY = -(planSetup.Beams.First().IsocenterPosition.y - image.UserOrigin.y) * 0.1;
+                            if (planSetup.TreatmentOrientation.ToString().IndexOf("Prone") != -1) // Change sign if Orientation is Prone.
+                            {
+                                isoY *= -1;
+                                userY *= -1;
+                            }
+                            double shiftY = 7.1;
+                            double sumY = -isoY - userY + shiftY;
+                            x2_value += ", Beräknad britshöjd: " + (-userY).ToString("0.0") + (-isoY >= 0 ? "+" : string.Empty) + (-isoY).ToString("0.0") + "+" + shiftY.ToString("0.0") + " = " + sumY.ToString("0.0") + " cm";
+                            if (sumY < -30)
+                                x2_status = AutoCheckStatus.WARNING;
+                        }
                     }
                 }
                 else if (string.Compare(image.Series.ImagingDeviceId, "PET/CT 01") == 0)
@@ -86,58 +125,34 @@ namespace Checklist
             if (checklistType == ChecklistType.Eclipse || checklistType == ChecklistType.EclipseGating)
                 checklistItems.Add(new ChecklistItem("X4. Genomför oberoende MU-kontroll", "Genomför obeorende MU-kontroll via RVP", "", AutoCheckStatus.MANUAL));
 
-            if (checklistType == ChecklistType.EclipseVMAT)
+            if (checklistType == ChecklistType.EclipseVMAT || checklistType == ChecklistType.EclipseConformal)
             {
                 AutoCheckStatus x5_status = AutoCheckStatus.MANUAL; 
                 string x5_value = string.Empty;
                 string x5_details = string.Empty;
+                //List<string> reqStrings = new List<string>() {"qc","d","4"}; 
                 //lägg till kontroll att QC - plan finns och ger annars varning. WORK in progress
-                //List<PlanSetup> allplans = patient.Courses.SelectMany(p => p.PlanSetups).ToList();
-                //List<PlanSetup> verpallplans = allplans.Where(p => p.PlanIntent == "VERIFICATION").ToList();
-                //List<PlanSetup> corrverplans = new List<PlanSetup>();
-
-                //var verpallplansFilter = verpallplans.Where(x => x.VerifiedPlan != null).ToList();
-                //var testuid = verpallplansFilter.Select(x => x.VerifiedPlan.UID).ToList();
-                //    //foreach (PlanSetup p in verpallplansFilter)
-                //    //{
-                   
-                   
-                        
-                    //    string curuid = p.VerifiedPlan.UID; 
-                    //    if (curuid == planSetup.UID)
-                    //        corrverplans.Add(p); 
-                  
-                    //}
+                DataTable qcPlans = AriaInterface.Query("select PlanSetup.PlanSetupId from (select ClinRTPlanSer = RTPlan.RTPlanSer from RTPlan where RTPlan.PlanSetupSer = '" + planSetupSer.ToString() +"') as ClinRTPlan, PlanSetup inner join RTPlan on PlanSetup.PlanSetupSer = RTPlan.PlanSetupSer inner join PlanRelationship on PlanRelationship.RTPlanSer = RTPlan.RTPlanSer where PlanRelationship.RelationshipType = 'VERIFIED_PLAN' and PlanRelationship.RelatedRTPlanSer = ClinRTPlanSer order by PlanSetup.PlanSetupId");
                 
-                //int noQCplans = verpallplans.Count();
-                //List<PlanSetup> corallplans = corrverplans.Where(p => p.Id.ToLower().Contains("qc") && p.Id.ToLower().Contains(planSetup.Id.ToLower().Substring(0, 3)) && p.Id.ToLower().Contains("d") && p.Id.ToLower().Contains("4")).ToList();
-
-                //// Note if
-                //try
-                //{
-                //    if (noQCplans > 0 && allplans.Count() == 0)
-
-                //    {
-                //        x5_status = AutoCheckStatus.WARNING;
-                //        x5_value = "Det finns " + noQCplans + " QC-plan(er) kopplade till planen, men är inkorrekt namngivna.";
-                //        x5_details = "Korrekt namngivning av QC-planer är: QC PX_X d4 eller QC PX_X delta4";
-                //    }
-                //    if (allplans.Count() > 1)
-                //    {
-                //        x5_status = AutoCheckStatus.MANUAL;
-                //        string ids = string.Empty;
-                //        foreach (PlanSetup p in allplans)
-                //            ids = ids + (ids.Length == 0 ? p.Id : ", " + p.Id);
-                //        x5_value = "QC-planer finns och är korrekt namngivna: " + ids;
-
-                //    }
-                //}
-                //catch (Exception exception)
-                //{
-                //    x5_value = "Problem med att hitta QC-planer..." + exception.Message;
-                //}
-
-                checklistItems.Add(new ChecklistItem("X5. QC Course sätts till Completed.", "Sätt status på QC coursen till Completed.", x5_value, x5_details, x5_status));
+                if (qcPlans.Rows.Count > 0)
+                {
+                    foreach (DataRow row in qcPlans.Rows)
+                    {
+                        x5_value += (x5_value.Length == 0 ? "Verifikationsplaner finns: " : ", ") + (string)row["PlanSetupId"];
+                    }
+                    if (!(x5_value.IndexOf("QC") > 1 && (x5_value.IndexOf("d") > 1 || x5_value.IndexOf("D") > 1) && x5_value.IndexOf("4") > 1))
+                    {
+                        x5_value += " OBS: Inkorrekt namn på verifikationsplan, automatisk export ej möjlig";
+                        x5_status = AutoCheckStatus.WARNING; 
+                    }
+                }
+                else // SÄtter varning om det inte finns nån QC-plan
+                {
+                    x5_status = AutoCheckStatus.FAIL;
+                    x5_value = "Det finns ingen QC-plan kopplad till den kliniska planen. Det skall föreligga QC-plan för Delta4."; 
+                }
+                
+                checklistItems.Add(new ChecklistItem("X5. QC-planer/QC course sätts till Completed.", "Sätt status på QC coursen till Completed. \nKontroll av befintiliga QC-planer görs. \nNamngivning enligt: QC PX_X Delta4.", x5_value, x5_status));
             }
             if (checklistType == ChecklistType.EclipseGating && image.Comment.IndexOf("DIBH") != -1 || checklistType == ChecklistType.EclipseGating && image.Comment.IndexOf("BH") != -1)
             {
