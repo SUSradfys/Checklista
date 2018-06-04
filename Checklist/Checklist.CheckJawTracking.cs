@@ -78,18 +78,18 @@ namespace Checklist
                     double percY = 0;
                     if (xSz.Min() < lim)
                     {
-                        percX = xSz.Select(v => v <= lim).Count()/xSz.Count()*100;
+                        percX = (double)xSz.Where(v => v <= lim).Count()/(double)xSz.Count()*100;
                     }
                     if (ySz.Min() < lim)
                     {
-                        percY = ySz.Select(v => v <= lim).Count()/ySz.Count()*100;
+                        percY = (double)ySz.Where(v => v <= lim).Count()/ (double)ySz.Count()*100;
                     }
                     if (percX > 0 || percY > 0)
                     { 
                         if (checklistType == ChecklistType.Eclipse || checklistType == ChecklistType.EclipseGating)
                             outText += (String.IsNullOrEmpty(outText) ? "" : ", ") + beam.Id + ": " + (percX > 0 ? "X-kollimator < " + lim + " mm" : "") + (percY > 0 ? " Y-kollimator < " + lim + " mm" : "");
                         else
-                            outText += (String.IsNullOrEmpty(outText) ? "" : ", ") + beam.Id + ": " + (percX > 0 ? "X-kollimator < " + lim + " mm i " + percX + "% av segmenten" : "") + (percY > 0 ? " Y-kollimator < " + lim + " mm i " + percY + "% av segmenten" : "");
+                            outText += (String.IsNullOrEmpty(outText) ? "" : ", ") + beam.Id + ": " + (percX > 0 ? "X-kollimator < " + lim + " mm i " + percX.ToString("0.0") + "% av segmenten" : "") + (percY > 0 ? " Y-kollimator < " + lim + " mm i " + percY.ToString("0.0") + "% av segmenten" : "");
                         
                     }
                     
