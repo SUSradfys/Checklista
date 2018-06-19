@@ -157,15 +157,36 @@ namespace Checklist
             if (checklistType == ChecklistType.EclipseGating && image.Comment.IndexOf("DIBH") != -1 || checklistType == ChecklistType.EclipseGating && image.Comment.IndexOf("BH") != -1)
             {
                 double[] deltaCouch = new double[3];
-                Beam beam = planSetup.Beams.Where(b => b.IsSetupField == false).FirstOrDefault();
-                deltaCouch[0] = -beam.IsocenterPosition.x / 10.0;
-                deltaCouch[1] = -beam.IsocenterPosition.z / 10.0;
-                DataTable CouchPos = AriaInterface.Query("select distinct Slice.CouchVrt from Slice inner join Series on Series.SeriesSer=Slice.SeriesSer where Series.SeriesUID='" + image.Series.UID + "'");
-                double couchVrt = (double)CouchPos.Rows[0]["CouchVrt"];
-                deltaCouch[2] = beam.IsocenterPosition.y / 10.0 - couchVrt;
-                checklistItems.Add(new ChecklistItem("X6. Fyll i värden för Delta Couch.", "Fyll i beräknade Delta Couch-värden för planens alla fält.", String.Format("Vrt: {0:N2} cm, Lng: {1:N2} cm, Lat: {2:N2} cm", deltaCouch[2], deltaCouch[1], deltaCouch[0]), String.Format("Delta Couch shift (cm):\r\nVrt:\t{0:N2}\r\nLng:\t{1:N2}\r\nLat:\t{2:N2}", deltaCouch[2], deltaCouch[1], deltaCouch[0]), AutoCheckStatus.MANUAL));
-                
-                
+                IEnumerable<VVector> AllIsosPos = GetAllIsocenters(planSetup);
+                if (AllIsosPos.Count() == 1)
+                {
+                    Beam beam = planSetup.Beams.Where(b => b.IsSetupField == false).FirstOrDefault();
+                    deltaCouch[0] = -beam.IsocenterPosition.x / 10.0;
+                    deltaCouch[1] = -beam.IsocenterPosition.z / 10.0;
+                    DataTable CouchPos = AriaInterface.Query("select distinct Slice.CouchVrt from Slice inner join Series on Series.SeriesSer=Slice.SeriesSer where Series.SeriesUID='" + image.Series.UID + "'");
+                    double couchVrt = (double)CouchPos.Rows[0]["CouchVrt"];
+                    deltaCouch[2] = beam.IsocenterPosition.y / 10.0 - couchVrt;
+                    checklistItems.Add(new ChecklistItem("X6. Fyll i värden för Delta Couch.", "Fyll i beräknade Delta Couch-värden för planens alla fält.", String.Format("Vrt: {0:N2} cm, Lng: {1:N2} cm, Lat: {2:N2} cm", deltaCouch[2], deltaCouch[1], deltaCouch[0]), String.Format("Delta Couch shift (cm):\r\nVrt:\t{0:N2}\r\nLng:\t{1:N2}\r\nLat:\t{2:N2}", deltaCouch[2], deltaCouch[1], deltaCouch[0]), AutoCheckStatus.MANUAL));
+                }
+                else
+                {
+                    string IsoInfo = string.Empty;
+                    DataTable CouchPos = AriaInterface.Query("select distinct Slice.CouchVrt from Slice inner join Series on Series.SeriesSer=Slice.SeriesSer where Series.SeriesUID='" + image.Series.UID + "'");
+                    double couchVrt = (double)CouchPos.Rows[0]["CouchVrt"];
+                    int count = 1; 
+                    foreach (VVector iso in AllIsosPos)
+                    {
+                        deltaCouch[0] = -iso.x / 10.0;
+                        deltaCouch[1] = -iso.z / 10.0;
+                        deltaCouch[2] = iso.y / 10 - couchVrt;
+                        IsoInfo += "Iso "+ count.ToString()  + String.Format(": Vrt: {0:N2} cm, Lng: {1:N2} cm, Lat: {2:N2} cm", deltaCouch[2], deltaCouch[1], deltaCouch[0]) + " \r\n\r\n";
+                        count += 1;
+                    }
+                    checklistItems.Add(new ChecklistItem("X6. Fyll i värden för Delta Couch.", "Fyll i beräknade Delta Couch-värden för planens alla fält.", "Planen ifråga har " + (count-1).ToString() + " isocenter och därmed skall multipla delta couch fyllas i se Detaljer ----->", "Delta Couch shift (cm):\r\n" + IsoInfo, AutoCheckStatus.MANUAL));
+
+
+                }
+
                 //checklistItems.Add(new ChecklistItem("X7. Importera underlag till Catalyst.", "Importera plan och strukturset till Catalyst i enlighet med gällande metodbeskrivning.", String.Empty, AutoCheckStatus.MANUAL));
 
             }

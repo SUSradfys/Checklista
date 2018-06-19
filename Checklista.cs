@@ -29,10 +29,10 @@ namespace VMS.TPS
                 AriaInterface.Disconnect();
                 if (user.Rows.Count == 1 && user.Rows[0]["Profession"] != DBNull.Value)
                     profession = (string)user.Rows[0]["Profession"];
-                if (string.Compare(profession, "Fysiker") == 0 || string.Compare(profession, "dpl") == 0 || string.Compare(profession, "vik") == 0)
+                if (string.Compare(profession, "Fysiker") == 0 || string.Compare(profession, "dpl") == 0 || string.Compare(profession, "vik") == 0 || string.Compare(profession,"Fysiker stud") == 0 )
                 {
-                    if (String.Compare(profession, "vik") == 0)
-                        profession = "dpl"; // Treat vik as dpl
+                    if (String.Compare(profession, "vik") == 0 || string.Compare(profession, "Fysiker stud") == 0)
+                        profession = "dpl"; // Treat vik and Fysiker stud as dpl
                     Checklist.SelectChecklistWindow selectChecklistWindow = new Checklist.SelectChecklistWindow();
                     if (selectChecklistWindow.ShowDialog() == DialogResult.OK)
                     {
