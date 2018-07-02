@@ -121,23 +121,56 @@ namespace Checklist
                                 if (openMU < 600 && treatmentTime == 0.5)
                                     p3_numberOfPass++;
                             }
-                            else if (checklistType == ChecklistType.EclipseVMAT || checklistType == ChecklistType.EclipseConformal)
+                            else if ((checklistType == ChecklistType.EclipseVMAT || checklistType == ChecklistType.EclipseConformal) && beam.EnergyModeDisplayName.IndexOf("FFF") == -1)
                             {
                                 // For VMAT use treatmentTime=2 if MU<=400, otherwise treatmentTime = min(5.0, max(3.0, ceil(MU/(DoseRate/N)))), where N=2
-                                int doseRateFactor = 2;
+
                                 if (openMU <= 400 && treatmentTime == 2)
                                     p3_numberOfPass++;
-                                if (openMU > 400 && treatmentTime == Math.Min(5.0, Math.Max(3.0, Math.Ceiling(openMU / ((double)beam.DoseRate / doseRateFactor)))))
+                                if (openMU > 400 && openMU <= 900 && treatmentTime == 3)
+                                    p3_numberOfPass++;
+                                if (openMU > 900 && openMU <= 1200 && treatmentTime == 4)
+                                    p3_numberOfPass++;
+                                if (openMU > 1200 && openMU <= 2000 && treatmentTime == 5)
+                                    p3_numberOfPass++;
+                                if (openMU > 2000 && treatmentTime == 7)
                                     p3_numberOfPass++;
                                 /*
+                                 * New Old 2018-07-02 commented. 
+                                 * int doseRateFactor = 2;
+                                if (openMU > 400 && treatmentTime == Math.Min(5.0, Math.Max(3.0, Math.Ceiling(openMU / ((double)beam.DoseRate / doseRateFactor)))))
+                                    p3_numberOfPass++;
+                                
+                                Old
                                 if (openMU <= 400 && treatmentTime == 2)
                                     p3_numberOfPass++;
                                 else if (openMU > 400 && treatmentTime == 3)
                                     p3_numberOfPass++;
                                 */
-                                
+
                             }
-                            else if (checklistType == ChecklistType.EclipseGating)
+                            else if (checklistType == ChecklistType.EclipseVMAT && beam.EnergyModeDisplayName.IndexOf("FFF") != -1) // Specific Check for Hypo and SRS-brain. 
+                            {
+                                int doseRateFactor = 2;
+                                double estTime = openMU / ((double)beam.DoseRate / doseRateFactor);
+
+                                if (planSetup.UniqueFractionation.NumberOfFractions == 7 && planSetup.UniqueFractionation.PrescribedDosePerFraction.Dose > 6)
+                                {
+                                    if (planSetup.Beams.Where(v => v.IsSetupField == false).Count() == 1 && treatmentTime == 3)
+                                        p3_numberOfPass++;
+                                    else if (planSetup.Beams.Where(v => v.IsSetupField == false).Count() == 2 && treatmentTime == 1.5)
+                                        p3_numberOfPass++;
+                                }
+                                if (planSetup.UniqueFractionation.NumberOfFractions == 3 && planSetup.UniqueFractionation.PrescribedDosePerFraction.Dose > 9)
+                                {
+                                    if (planSetup.Beams.Where(v => v.IsSetupField == false).Count() == 1 && treatmentTime == 3)
+                                        p3_numberOfPass++;
+                                    else if (planSetup.Beams.Where(v => v.IsSetupField == false).Count() == 2 && treatmentTime == 1.5)
+                                        p3_numberOfPass++;
+                                }
+
+                            }
+                            else if (checklistType == ChecklistType.EclipseGating || (checklistType == ChecklistType.EclipseConformal && beam.EnergyModeDisplayName.IndexOf("FFF") != -1))
                             {
                                 if (treatmentTime == 5)
                                     p3_numberOfPass++;
@@ -158,7 +191,7 @@ namespace Checklist
                     p3_status = AutoCheckStatus.PASS;
                 p3_value = reorderBeamParam(p3_value, ",");
 
-                checklistItems.Add(new ChecklistItem("P3. Beam on-tiderna är korrekta", "Kontrollera att fälten är tilldelade korrekta beam on-tider:\r\n  • 0.5 min för FFF fält med <600 MU\r\n  • 1 min för öppna fält med <=500 MU och kilfält med <=300 MU\r\n  • 2 min för öppna fält med >500 MU och kilfält med >300 MU  \r\n  • 5 min för gating\r\n  • För RA gäller* \r\n\t MU \t\tBeam on (min)\r\n\t <= 400\t\t2\r\n\t 400<x<=900\t3\r\n\t 900<x<=1200\t4\r\n\t >1200\t\t5\r\n*Om dosraten är 600 MU/min.", p3_value, p3_status));
+                checklistItems.Add(new ChecklistItem("P3. Beam on-tiderna är korrekta", "Kontrollera att fälten är tilldelade korrekta beam on-tider:\r\n  • 0.5 min för FFF fält med <600 MU\r\n  • 1 min för öppna fält med <=500 MU och kilfält med <=300 MU\r\n  • 2 min för öppna fält med >500 MU och kilfält med >300 MU  \r\n  • 5 min för gating\r\n  • 5 min för cArc FFF\r\n  • För RA/cArc gäller* \r\n\t MU \t\tBeam on (min)\r\n\t <= 400\t\t2\r\n\t 400<x<=900\t3\r\n\t 900<x<=1200\t4\r\n\t 1200<x<=2000\t5\r\n\t >2000\t\t7\r\n*Om dosraten är 600 MU/min. \r\n  • För Hypo/hjärna FFF gäller: \r\n\t Antal arcs \tBeam on (min)\r\n\t 1\t\t3\r\n\t 2\t\t1.5\r\n\t", p3_value, p3_status));
             }
 
             // Will now use information from Prescription rather than verifying against ChecklistType
@@ -318,7 +351,7 @@ namespace Checklist
                 checklistItems.Add(new ChecklistItem("P7. Diodvärden finns införda under Comments för fälten", "Kontrollera att diodvärden finns införda för fält med >=25 MU alternativt >=50 MU (öppet+kil) för Elekta.", p7_value, p7_status));
             }
 
-            checklistItems.Add(new ChecklistItem("P8. Dosfördelningen är rimlig", "Kontrollera att dosfördelningen är rimlig med avseende på targettäckning och omkringliggande riskorgan", "", AutoCheckStatus.MANUAL));
+            checklistItems.Add(new ChecklistItem("P8. Dosfördelningen är rimlig", "Kontrollera att dosfördelningen är rimlig med avseende på targettäckning och omkringliggande riskorgan. Kontroll skall göras av varje dosnivå", "", AutoCheckStatus.MANUAL));
 
             string p9_value_detailed = string.Empty;
             string p9_value = String.Empty;
@@ -434,7 +467,9 @@ namespace Checklist
             {
                 p11_status = AutoCheckStatus.FAIL;
             }
-            checklistItems.Add(new ChecklistItem("P11. Normering är korrekt", "Kontrollera att planen är normerad på korrekt vis \r\n  • Icke-normerade planer accepteras ej. \r\n  • Normalt till targetvolymens mediandos (om särskilt skäl föreligger kan en punktnormering användas). \r\n  • För stereotaktiska lungor i Eclipse normeras dosen till isocenter och ordineras till 75%-isodosen.\r\n  • För stereotaktiska kotor/skelett normeras planen så att volymen som täcker 95% av PTV-volymen är ordinerad dos (normal 30 Gy). \r\n  • För VMAT ska Plan Normalization Value skall normeringsvärdet vara i intervallet [0.970, 1.030].", p11_value, p11_status));
+            if (planSetup.PlanNormalizationMethod.IndexOf("100% in Isocenter of") == -1 && checklistType == ChecklistType.EclipseConformal)
+                p11_status = AutoCheckStatus.FAIL;
+            checklistItems.Add(new ChecklistItem("P11. Normering är korrekt", "Kontrollera att planen är normerad på korrekt vis \r\n  • Icke-normerade planer accepteras ej. \r\n  • Normalt till targetvolymens mediandos (om särskilt skäl föreligger kan en punktnormering användas). \r\n  • För stereotaktiska lungor i Eclipse normeras dosen till isocenter och ordineras till 75%-isodosen.\r\n  • För stereotaktiska behandlingar av skelettmetastaser ska planen normeras så att 95% av PTV-volymen erhåller ordinerad dos (normal 30 Gy). \r\n  • För VMAT ska Plan Normalization Value skall normeringsvärdet vara i intervallet [0.970, 1.030].", p11_value, p11_status));
 
             string p12_value = string.Empty;            
             string p13_value = string.Empty;

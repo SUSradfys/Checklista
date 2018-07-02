@@ -106,7 +106,7 @@ namespace Checklist
             {
                 // check that setup note for beam "Uppl*gg" contains the string
                 AutoCheckStatus x3_status = AutoCheckStatus.FAIL;
-                string defSetup = "OBS! Icke-coplanar behandling (britsrotation). Använd NC-plattan som förlängning av britsen.";
+                string defSetup = "NC-platta används vid behandling pga golvvinkel";//OBS! Icke-coplanar behandling (britsrotation). Använd NC-plattan som förlängning av britsen.";
                 DataTable setupNote = AriaInterface.Query("select SetupNote from Radiation where PlanSetupSer=" + planSetupSer.ToString() + " and UPPER(RadiationId) like 'UPPL%GG'");
                 foreach (DataRow row in setupNote.Rows)
                     {
@@ -173,16 +173,17 @@ namespace Checklist
                     string IsoInfo = string.Empty;
                     DataTable CouchPos = AriaInterface.Query("select distinct Slice.CouchVrt from Slice inner join Series on Series.SeriesSer=Slice.SeriesSer where Series.SeriesUID='" + image.Series.UID + "'");
                     double couchVrt = (double)CouchPos.Rows[0]["CouchVrt"];
-                    int count = 1; 
+                    int count = 0; 
                     foreach (VVector iso in AllIsosPos)
                     {
+                        count += 1;
                         deltaCouch[0] = -iso.x / 10.0;
                         deltaCouch[1] = -iso.z / 10.0;
                         deltaCouch[2] = iso.y / 10 - couchVrt;
                         IsoInfo += "Iso "+ count.ToString()  + String.Format(": Vrt: {0:N2} cm, Lng: {1:N2} cm, Lat: {2:N2} cm", deltaCouch[2], deltaCouch[1], deltaCouch[0]) + " \r\n\r\n";
-                        count += 1;
+                        
                     }
-                    checklistItems.Add(new ChecklistItem("X6. Fyll i värden för Delta Couch.", "Fyll i beräknade Delta Couch-värden för planens alla fält.", "Planen ifråga har " + (count-1).ToString() + " isocenter och därmed skall multipla delta couch fyllas i se Detaljer ----->", "Delta Couch shift (cm):\r\n" + IsoInfo, AutoCheckStatus.MANUAL));
+                    checklistItems.Add(new ChecklistItem("X6. Fyll i värden för Delta Couch.", "Fyll i beräknade Delta Couch-värden för planens alla fält. \r\nDUBBLA ISOCENTER + DIBH! Fysiker importerar till Catalyst", "Planen ifråga har " + (count).ToString() + " isocenter och därmed skall multipla delta couch fyllas i se Detaljer ----->", "Delta Couch shift (cm):\r\n" + IsoInfo, AutoCheckStatus.WARNING));
 
 
                 }

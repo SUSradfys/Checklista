@@ -68,6 +68,8 @@ namespace Checklist
             outText = string.Empty;
             checkstatusOut = AutoCheckStatus.MANUAL;
             string calcSize;
+            int tol = 25;
+            bool isOverTol = false;
             foreach (Beam beam in planSetup.Beams)
             {
                 if (!beam.IsSetupField)
@@ -76,6 +78,7 @@ namespace Checklist
                     var ySz = beam.ControlPoints.Select(i => Math.Abs(i.JawPositions.Y2 - i.JawPositions.Y1));
                     double percX = 0;
                     double percY = 0;
+                    
                     if (xSz.Min() < lim)
                     {
                         percX = (double)xSz.Where(v => v <= lim).Count()/(double)xSz.Count()*100;
@@ -90,7 +93,8 @@ namespace Checklist
                             outText += (String.IsNullOrEmpty(outText) ? "" : ", ") + beam.Id + ": " + (percX > 0 ? "X-kollimator < " + lim + " mm" : "") + (percY > 0 ? " Y-kollimator < " + lim + " mm" : "");
                         else
                             outText += (String.IsNullOrEmpty(outText) ? "" : ", ") + beam.Id + ": " + (percX > 0 ? "X-kollimator < " + lim + " mm i " + percX.ToString("0.0") + "% av segmenten" : "") + (percY > 0 ? " Y-kollimator < " + lim + " mm i " + percY.ToString("0.0") + "% av segmenten" : "");
-                        
+                        if (percX > tol || percY > tol)
+                            isOverTol = true; 
                     }
                     
                 }
@@ -105,16 +109,22 @@ namespace Checklist
                 //Ger följande utfall
                 if (calcSize == "0.1" && !String.IsNullOrEmpty(outText)) // outText är ej tom, dvs någon del av något fält < lim mm. Då skall Algoritmen
                     checkstatusOut = AutoCheckStatus.PASS;
-                else if (calcSize == "0.25" && !String.IsNullOrEmpty(outText))
-                    checkstatusOut = AutoCheckStatus.FAIL;
                 else if (calcSize == "0.25" && String.IsNullOrEmpty(outText))
                     checkstatusOut = AutoCheckStatus.PASS;
+                else if (calcSize == "0.25" && !String.IsNullOrEmpty(outText))
+                {
+                    if (isOverTol) // if more than 25 % of the segments are less than the set value lim this will give a fail, else Warning. 
+                        checkstatusOut = AutoCheckStatus.FAIL;
+                    else
+                        checkstatusOut = AutoCheckStatus.WARNING;
+                }
+
                 else if (calcSize == "0.1" && String.IsNullOrEmpty(outText))
                 {
                     checkstatusOut = AutoCheckStatus.WARNING;
-                    outText = ", Rekommenderat med 0.25 cm för fält > " + lim/10 + " cm.";
+                    outText = ", Rekommenderat med 0.25 cm för fält > " + lim / 10 + " cm.";
                 }
-                outText = calcSize + " cm " + outText;
+                outText = calcSize + " cm. " + outText;
                 
             }
             //return new Tuple<string, AutoCheckStatus>(outText, checkstatusOut); 

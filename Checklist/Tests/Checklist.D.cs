@@ -40,7 +40,7 @@ namespace Checklist
             }
             else
                 
-                checklistItems.Add(new ChecklistItem("D2. Beräkningsupplösningen är korrekt", "Kontrollera att korrekt beräkningsupplösning (0.10 (fält < 3 cm) eller 0.25 cm) har använts.", d2_value, d2_status));
+                checklistItems.Add(new ChecklistItem("D2. Beräkningsupplösningen är korrekt", "Kontrollera att korrekt beräkningsupplösning \r\n• 0.10 cm (fält < 3 cm i > 25% av segmenten) eller \r\n• 0.25 cm har använts.", d2_value, d2_status));
 
             string d3_value;
             if (!planSetup.PhotonCalculationOptions.TryGetValue("HeterogeneityCorrection", out d3_value))
