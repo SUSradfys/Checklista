@@ -71,7 +71,11 @@ namespace Checklist
                 checklistItems.Add(new ChecklistItem("C2. Fältbredden är rimlig ", "Kontrollera att fältet har en rimlig fältbredd och har korrekt behandlingsteknik FF eller FFF (riktvärde <= 5 cm, vid större fältbredd ska FF användas).", c2_value, c2_status));
 
                 string c3_value = string.Empty;
+
                 AutoCheckStatus c3_status = AutoCheckStatus.WARNING;
+
+                string c4_value = string.Empty;
+                AutoCheckStatus c4_status = AutoCheckStatus.MANUAL;
                 //int c3_numberOfPass = 0;
                 double totArcLength = 0;
                 foreach (Beam beam in planSetup.Beams)
@@ -81,11 +85,26 @@ namespace Checklist
                     {
 
                         //double arclength = beam.ControlPoints[0].GantryAngle - beam.ControlPoints[beam.ControlPoints.Count()].GantryAngle; 
-
+                        // Kombinerad summering av arcLength samt kontroll av korrekt MLC-inställning samt behandlingsteknik. 
                         totArcLength += beam.ArcLength; 
                        
 
                         c3_value += (c3_value.Length == 0 ? string.Empty : ", ") + beam.Id + ": " + beam.ArcLength.ToString("0.0") + "°";
+                        if (beam.MLCPlanType.ToString().IndexOf("ArcDynamic") == -1 && beam.Technique.ToString().IndexOf("SRS ARC") == -1)
+                        {
+                            c4_value += "Behandlingsteknik är " + beam.Technique.ToString() + " och MLC-inställningar är " + beam.MLCPlanType.ToString() + ", korrigera till SRS ARC respektive Arc Dynamic. Tag bort och lägg till MLC igen och gör om Fit To Structure.";
+                            c4_status = AutoCheckStatus.FAIL;
+                        }
+                        else if (beam.MLCPlanType.ToString().IndexOf("ArcDynamic") == -1 && beam.Technique.ToString().IndexOf("SRS ARC") > -1)
+                        {
+                            c4_value += "MLC-inställningar är " + beam.MLCPlanType.ToString() + ", korrigera till Arc Dynamic. Tag bort och lägg till MLC igen och gör om Fit To Structure.";
+                            c4_status = AutoCheckStatus.FAIL;
+                        }
+                        else if (beam.Technique.ToString().IndexOf("SRS ARC") == -1 && beam.MLCPlanType.ToString().IndexOf("ArcDynamic") > -1)
+                        {
+                            c4_value += "Behandlingsteknik är " + beam.Technique.ToString() + ", korrigera till SRS ARC.";
+                            c4_status = AutoCheckStatus.FAIL;
+                        }
                     }
 
                 }
@@ -97,9 +116,7 @@ namespace Checklist
                 checklistItems.Add(new ChecklistItem("C3. Arclängd är rimlig", "Kontrollera att totala längden på arcs är mer än 180°)", c3_value, c3_status));
                 // No Jawtracking for Conformal arcs
                 //var v5_values = CheckJawTracking(planSetup);
-
-                string c4_value = string.Empty;
-                AutoCheckStatus c4_status = AutoCheckStatus.MANUAL; 
+                // Values here is set in the loop for c3. 
                                         
                 checklistItems.Add(new ChecklistItem("C4. Leveransmönstret är rimligt", "Kontrollera visuellt att leveransmönstret är rimligt (att MLCn går längs Z_PTV-konturen)", c4_value, c4_status));
 
