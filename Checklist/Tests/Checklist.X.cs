@@ -191,7 +191,7 @@ namespace Checklist
                 //checklistItems.Add(new ChecklistItem("X7. Importera underlag till Catalyst.", "Importera plan och strukturset till Catalyst i enlighet med gällande metodbeskrivning.", String.Empty, AutoCheckStatus.MANUAL));
 
             }
-
+            
             checklistItems.Add(new ChecklistItem("X7. Treatment Approved", "Gör planen Treatment Approved. Planen får endast göras Treatment Approved efter att ovanstående kontroller är utförda och Oberoende MU-kontroll eller QC-mätning är godkänd.", string.Empty, AutoCheckStatus.MANUAL));
 
             checklistItems.Add(new ChecklistItem("X8. Task sätts till Done", "Tryck Done när alla kontroller är klara\r\n  • Ändra Qty till det antal planer som har kontrollerats\r\n  • Om planen har kontrollmätts tycker man Done först när planen både är kontrollerad och kontrollmätt", string.Empty, AutoCheckStatus.MANUAL));
