@@ -13,6 +13,8 @@ namespace Checklist
         EclipseVMAT,
         [Description("Eclipse (gating)")]
         EclipseGating,
+        [Description("Eclipse (ConformalArc)")]
+        EclipseConformal,
         MasterPlan,
         [Description("MasterPlan (IMRT)")]
         MasterPlanIMRT

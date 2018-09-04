@@ -22,21 +22,25 @@ namespace Checklist
                 checklistItems.Add(new ChecklistItem("D1. Beräkningsalgoritm är korrekt vald", "Kontrollera att korrekt beräkningsalgoritm (PB) har använts vid dosplaneringen.", d1_value, d1_status));
             }
             else
-                checklistItems.Add(new ChecklistItem("D1. Beräkningsalgoritm är korrekt vald", "Kontrollera att korrekt beräkningsalgoritm (AAA_13.0.26) har använts vid dosplaneringen.", d1_value, d1_status));
+                checklistItems.Add(new ChecklistItem("D1. Beräkningsalgoritm är korrekt vald", "Kontrollera att korrekt beräkningsalgoritm (AAA_13.6.26) har använts vid dosplaneringen.", d1_value, d1_status));
 
             string d2_value;
             if (!planSetup.PhotonCalculationOptions.TryGetValue("CalculationGridSizeInCM", out d2_value))
                 d2_value = "-";
             else
                 d2_value += " cm";
+
             AutoCheckStatus d2_status=CheckResult(string.Compare(d2_value, "0.25 cm") == 0);
+            GetFieldSizeGridSize(planSetup, 30, checklistType, out d2_value,out d2_status); //30 är beräsningen satt för kollimatorstorleken. 
+            
             if (checklistType == ChecklistType.MasterPlan || checklistType == ChecklistType.MasterPlanIMRT)
             {
                 d2_status = AutoCheckStatus.UNKNOWN;
                 checklistItems.Add(new ChecklistItem("D2. Beräkningsupplösningen är korrekt", "Kontrollera att korrekt beräkningsupplösning (0.30 cm) har använts.", d2_value, d2_status));
             }
             else
-                checklistItems.Add(new ChecklistItem("D2. Beräkningsupplösningen är korrekt", "Kontrollera att korrekt beräkningsupplösning (0.25 cm) har använts.", d2_value, d2_status));
+                
+                checklistItems.Add(new ChecklistItem("D2. Beräkningsupplösningen är korrekt", "Kontrollera att korrekt beräkningsupplösning \r\n• 0.10 cm (fält < 3 cm i > 25% av segmenten) eller \r\n• 0.25 cm har använts.", d2_value, d2_status));
 
             string d3_value;
             if (!planSetup.PhotonCalculationOptions.TryGetValue("HeterogeneityCorrection", out d3_value))

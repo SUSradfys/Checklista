@@ -188,20 +188,20 @@ namespace Checklist
             string s3_value = string.Empty;
             AutoCheckStatus s3_status = AutoCheckStatus.UNKNOWN;
             List<double> s3_setupFieldAngles = new List<double>();
-            List<double> s4_setupFieldAngles = new List<double>();
-            List<double> s4_FieldAngles = new List<double>();
+            List<double> s4_setupFieldCouchAngles = new List<double>();
+            List<double> s4_FieldCouchAngles = new List<double>();
             List<string> s3_beamIds = new List<string>();
             foreach (Beam beam in planSetup.Beams)
                 if (beam.IsSetupField && !Operators.LikeString(beam.Id.ToLower(), "Uppl*gg".ToLower(), CompareMethod.Text))
                 {
                     s3_setupFieldAngles.Add(beam.ControlPoints[0].GantryAngle);
-                    s4_setupFieldAngles.Add(beam.ControlPoints[0].PatientSupportAngle);
+                    s4_setupFieldCouchAngles.Add(beam.ControlPoints[0].PatientSupportAngle);
                     s3_beamIds.Add(beam.Id.ToLower());
                     s3_value += (s3_value.Length == 0 ? "Sida: " + treatmentSide.ToString() + ", " : ", ") + beam.Id + ": " + beam.ControlPoints[0].GantryAngle.ToString("0.0");
                 }
                 else if (!beam.IsSetupField)
                 {
-                    s4_FieldAngles.Add(beam.ControlPoints[0].PatientSupportAngle);
+                    s4_FieldCouchAngles.Add(beam.ControlPoints[0].PatientSupportAngle);
                 }
             int s3_cbctIndex = s3_beamIds.IndexOf("cbct");
             if (treatmentUnitManufacturer == TreatmentUnitManufacturer.Varian)
@@ -244,28 +244,33 @@ namespace Checklist
 
             string s4_value = string.Empty;
             AutoCheckStatus s4_status = AutoCheckStatus.MANUAL;
-            for (int i=0; i<s4_setupFieldAngles.Count; i++)
+
+            if (s4_setupFieldCouchAngles.Count == 0)
+                s4_value = "Setupfält saknas i planen";
+            else
+            { 
+            for (int i=0; i< s4_setupFieldCouchAngles.Count; i++)
             {
-                if (s4_setupFieldAngles[i] != 0)
-                { 
-                    s4_value += (s3_value.Length == 0 ? String.Empty : ", ") + s3_beamIds[i] + ": " + s4_setupFieldAngles[i].ToString("0.0");
+                if (s4_setupFieldCouchAngles[i] != 0)
+                {
+                    s4_value += (s4_value.Length == 0 ? "Setupfält har följande vinklar: " : ", ") + s3_beamIds[i] + ": " + s4_setupFieldCouchAngles[i].ToString("0.0");
                     s4_status = AutoCheckStatus.WARNING;
                 }
             }
             
             s4_value = reorderBeamParam(s4_value, ",");
             //Gives manual if sum of all setupfields are 0 but tx fields are different. Gives auto OK if ALL fields have tableangle 0; 
-            if (s4_setupFieldAngles.Sum() == 0 && s4_FieldAngles.Sum() != 0)
+            if (s4_setupFieldCouchAngles.Sum() == 0 && s4_FieldCouchAngles.Sum() != 0)
             {
                 s4_status = AutoCheckStatus.MANUAL;
                 s4_value = "Alla setupfält har golvvinkel 0°, behandlingsfält har ej golvvinkel 0°"; 
             }
-            if (s4_setupFieldAngles.Sum() == 0 && s4_FieldAngles.Sum() == 0)
+            if (s4_setupFieldCouchAngles.Sum() == 0 && s4_FieldCouchAngles.Sum() == 0)
             {
                 s4_status = AutoCheckStatus.PASS;
                 s4_value = "Alla setupfält och behandlingsfält har golvvinkel 0°";
             }
-
+            }
 
             checklistItems.Add(new ChecklistItem("S4. Golvvinklar för setupfälten är korrekta", "Kontrollera att setupfältens golvvinklar är korrekta. Om ej särskilda anledningar föreligger ska golvvinkel för samtliga setupfält vara 0°", s4_value, s4_status));
 
