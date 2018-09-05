@@ -15,3 +15,5 @@ http://www.osedu.org/licenses/ECL-2.0
 	permissions and limitations under the License.
 	
 This is an automated checklist for external beam radiotherapy treatment plans generated under Eclipse treatment planning system utilizing the Eclipse ScriptingAPI (version 13.6).
+
+Since 2018-09-05 we have migrated to a internal Git. Please contact jonas.scherman-rydhog@skane.se for the latest version. 
